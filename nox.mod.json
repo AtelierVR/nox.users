@@ -1,41 +1,46 @@
 ﻿{
-    "type":  "mod",
-    "id":  "nox.users",
-    "provides":  [
-                     "fr.hactazia.users",
-                     "users"
-                 ],
-    "name":  "Users",
-    "version":  "1.0.0",
-    "description":  "User profile, authentication, and account management API.",
-    "license":  "GPL-3.0",
-    "icon":  null,
-    "contact":  {
-                    "email":  "hactazia@gmail.com",
-                    "source":  "https://github.com/AtelierVR/nox.users",
-                    "website":  "https://nox.hactazia.fr/",
-                    "issues":  "https://github.com/AtelierVR/nox.users/issues"
-                },
-    "authors":  [
-                    {
-                        "name":  "Hactazia",
-                        "email":  "hactazia@gmail.com",
-                        "website":  "https://hactazia.fr/"
-                    }
-                ],
-    "contributors":  [
-
-                     ],
-    "relations":  [
-
-                  ],
-    "entrypoints":  {
-
-                    },
-    "references":  [
-
-                   ],
-    "permissions":  [
-
-                    ]
+  "type": "mod",
+  "id": "nox.users",
+  "provides": [
+    "fr.hactazia.users",
+    "users"
+  ],
+  "name": "Users",
+  "version": "1.0.0",
+  "description": "User profile, authentication, and account management API.",
+  "license": "GPL-3.0",
+  "icon": null,
+  "contact": {
+    "email": "hactazia@gmail.com",
+    "source": "https://github.com/AtelierVR/nox.users",
+    "website": "https://nox.hactazia.fr/",
+    "issues": "https://github.com/AtelierVR/nox.users/issues"
+  },
+  "authors": [
+    {
+      "name": "Hactazia",
+      "email": "hactazia@gmail.com",
+      "website": "https://hactazia.fr/"
+    }
+  ],
+  "relations": [
+    {
+      "id": "search",
+      "type": "recommends",
+      "version": "\u003e=1.0.0"
+    }
+  ],
+  "entrypoints": {
+    "main": [
+      "Nox.Users.Runtime.Main"
+    ],
+    "client": [
+      "Nox.Users.Runtime.Client"
+    ],
+    "editor": [
+      "Nox.Users.Runtime.Editor.AuthentificationPanel",
+      "Nox.Users.Runtime.Editor.EditorUser",
+      "Nox.Users.Runtime.Editor.ProfilePanel"
+    ]
+  }
 }

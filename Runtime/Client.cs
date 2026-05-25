@@ -1,19 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using api.nox.user.client;
-using api.nox.user.widget;
 using Cysharp.Threading.Tasks;
 using Nox.CCK.Mods.Cores;
 using Nox.CCK.Mods.Events;
 using Nox.CCK.Mods.Initializers;
-using Nox.CCK.Network;
 using Nox.CCK.Utils;
 using Nox.UI;
 using Nox.UI.Widgets;
+using Nox.Users.Runtime.Clients;
 using UnityEngine;
 
-namespace api.nox.user {
+namespace Nox.Users.Runtime {
 	public class Client : IClientModInitializer {
 		internal static IUiAPI UiAPI
 			=> Main.Instance.CoreAPI.ModAPI

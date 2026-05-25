@@ -1,5 +1,3 @@
-using api.nox.user.network;
-using api.nox.user.search;
 using Cysharp.Threading.Tasks;
 using Nox.CCK.Language;
 using Nox.CCK.Mods.Cores;
@@ -10,16 +8,16 @@ using Nox.Network;
 using Nox.Search;
 using Nox.Servers;
 using Nox.Tables;
-using Nox.Users;
+using Nox.Users.Runtime.Networks;
 using UnityEngine.Networking;
 
-namespace api.nox.user {
+namespace Nox.Users.Runtime {
 	public class Main : IMainModInitializer, IUserAPI {
 		static internal Main Instance;
 		internal IMainModCoreAPI CoreAPI;
-		internal Network Network;
+		internal Networks.Network Network;
 		private LanguagePack _language;
-		private Search _search;
+		private Search.Search _search;
 
 		public static IServerAPI ServerAPI
 			=> Instance.CoreAPI.ModAPI
@@ -45,11 +43,11 @@ namespace api.nox.user {
 			CoreAPI  = api;
 			Instance = this;
 			RequestNode.OnCreated.AddListener(OnBeforeRequest);
-			Network   = new Network();
+			Network   = new Networks.Network();
 			_language = api.AssetAPI.GetAsset<LanguagePack>("lang.asset");
-			LanguageManager.AddPack(_language);
+			if (_language != null) LanguageManager.AddPack(_language);
 
-			_search = new Search();
+			_search = new Search.Search();
 
 			var user = Network.CurrentUser;
 			user ??= await Network.FetchCurrent();
@@ -76,7 +74,7 @@ namespace api.nox.user {
 			RequestNode.OnCreated.RemoveListener(OnBeforeRequest);
 			_search.Dispose();
 			Network.Dispose();
-			LanguageManager.RemovePack(_language);
+			if (_language != null) LanguageManager.RemovePack(_language);
 			_search   = null;
 			Network   = null;
 			_language = null;
@@ -110,13 +108,13 @@ namespace api.nox.user {
 
 		public IUpdateCurrentUserRequest MakeUpdateCurrentRequest()
 			=> new UpdateCurrentUserRequest();
-		
+
 		public async UniTask<IFavorites> AddFavorite(Identifier identifier)
 			=> await Network.AddFavorite(identifier);
-		
+
 		public async UniTask<IFavorites> RemoveFavorite(Identifier identifier)
 			=> await Network.RemoveFavorite(identifier);
-		
+
 		public async UniTask<IFavorites> GetFavorites()
 			=> (await Network.FetchFavorites());
 	}
