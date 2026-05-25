@@ -1,0 +1,46 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Packages/nox.cck/Resources/nox.style.uss?fileID=7433441132597879392&amp;guid=956d93e835714844b98277f4fdbd77d3&amp;type=3#nox.style" />
+    <ui:VisualElement style="flex-grow: 1;">
+        <ui:ScrollView style="flex-grow: 1;">
+            <!-- Avatar card: without banner -->
+            <ui:GroupBox name="without-banner" class="p-8 m-0 border-b">
+                <ui:VisualElement style="flex-direction: row; align-items: center;">
+                    <ui:Image name="thumbnail" style="width: 56px; height: 56px; flex-shrink: 0; background-color: rgb(40,40,40); border-radius: 8px; margin-right: 12px;" />
+                    <ui:Label name="display_name" text="Display Name" class="text-md" style="flex-grow: 1;" />
+                </ui:VisualElement>
+            </ui:GroupBox>
+            <!-- Avatar card: with banner -->
+            <ui:GroupBox name="with-banner" class="p-0 m-0 border-b hidden">
+                <ui:Image name="banner" style="width: 100%; height: 100px; background-color: rgb(30,30,30);" />
+                <ui:VisualElement class="p-8" style="flex-direction: row; align-items: center;">
+                    <ui:Image name="thumbnail" style="width: 56px; height: 56px; flex-shrink: 0; background-color: rgb(40,40,40); border-radius: 8px; margin-right: 12px; margin-top: -28px;" />
+                    <ui:Label name="display_name" text="Display Name" class="text-md" style="flex-grow: 1;" />
+                </ui:VisualElement>
+            </ui:GroupBox>
+            <!-- User info -->
+            <ui:GroupBox class="p-8 m-0">
+                <ui:Label text="Account" class="text-lg mb-8" />
+                <ui:VisualElement style="flex-direction: row; margin-bottom: 4px;">
+                    <ui:Label text="ID" style="min-width: 100px; opacity: 0.7;" />
+                    <uie:UnsignedIntegerField name="id" readonly="true" class="large readonly" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; margin-bottom: 4px;">
+                    <ui:Label text="Server" style="min-width: 100px; opacity: 0.7;" />
+                    <ui:TextField name="server" readonly="true" class="large readonly" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; margin-bottom: 4px;">
+                    <ui:Label text="Username" style="min-width: 100px; opacity: 0.7;" />
+                    <ui:TextField name="username" readonly="true" class="large readonly" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; margin-bottom: 4px;">
+                    <ui:Label text="Display" style="min-width: 100px; opacity: 0.7;" />
+                    <ui:TextField name="display" readonly="true" class="large readonly" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row;">
+                    <ui:Label text="Email" style="min-width: 100px; opacity: 0.7;" />
+                    <ui:TextField name="email" readonly="true" class="large readonly" style="flex-grow: 1;" />
+                </ui:VisualElement>
+            </ui:GroupBox>
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

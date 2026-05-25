@@ -1,0 +1,50 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Packages/nox.cck/Resources/nox.style.uss?fileID=7433441132597879392&amp;guid=956d93e835714844b98277f4fdbd77d3&amp;type=3#nox.style" />
+    <ui:VisualElement style="flex-grow: 1;">
+        <ui:VisualElement style="flex-grow: 1; justify-content: center; align-items: center;">
+
+            <!-- Address step -->
+            <ui:VisualElement name="address" style="min-width: 300px; max-width: 400px; width: 100%;">
+                <ui:GroupBox class="p-8 m-0 border-b">
+                    <ui:Label text="Server Address" class="text-lg mb-8" />
+                    <ui:Label name="address_error" class="hidden" style="background-color: rgb(159,7,18); color: white; padding: 6px 12px; margin-bottom: 8px;" />
+                    <ui:VisualElement style="flex-direction: row;">
+                        <ui:TextField placeholder-text="https://server.example.com" name="address_input" class="large" style="flex-grow: 1;" />
+                        <ui:Button text="Connect" name="address_submit" class="large" style="min-width: 80px;" />
+                    </ui:VisualElement>
+                </ui:GroupBox>
+            </ui:VisualElement>
+
+            <!-- Login step -->
+            <ui:VisualElement name="login" style="min-width: 300px; max-width: 400px; width: 100%; display: none;">
+                <ui:GroupBox class="p-8 m-0 border-b">
+                    <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 8px;">
+                        <ui:Button text="← Back" name="login_back" class="large" style="margin-right: 8px;" />
+                        <ui:Label text="Login" class="text-lg" style="flex-grow: 1;" />
+                    </ui:VisualElement>
+                    <ui:Label name="login_error" class="hidden" style="background-color: rgb(159,7,18); color: white; padding: 6px 12px; margin-bottom: 8px;" />
+                    <ui:TextField placeholder-text="Identifier" name="login_identifier_input" class="large" style="margin-bottom: 4px;" />
+                    <ui:TextField placeholder-text="Password" name="login_password_input" password="true" class="large" style="margin-bottom: 8px;" />
+                    <ui:Button text="Login" name="login_submit" class="large" />
+                </ui:GroupBox>
+            </ui:VisualElement>
+
+            <!-- Verification step -->
+            <ui:VisualElement name="verification" style="min-width: 300px; max-width: 400px; width: 100%; display: none;">
+                <ui:GroupBox class="p-8 m-0 border-b">
+                    <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 8px;">
+                        <ui:Button text="← Back" name="verification_back" class="large" style="margin-right: 8px;" />
+                        <ui:Label text="Verification" class="text-lg" style="flex-grow: 1;" />
+                    </ui:VisualElement>
+                    <ui:Label name="verification_error" class="hidden" style="background-color: rgb(159,7,18); color: white; padding: 6px 12px; margin-bottom: 8px;" />
+                    <ui:DropdownField label="Method" name="verification_methods" class="large" style="margin-bottom: 8px;" />
+                    <ui:Label name="verification_label" style="opacity: 0.7; margin-bottom: 4px;" />
+                    <ui:TextField placeholder-text="Code" name="verification_input" class="large" style="margin-bottom: 4px;" />
+                    <ui:Label name="verification_description" class="text-xs" style="opacity: 0.6; margin-bottom: 8px;" />
+                    <ui:Button text="Verify" name="verification_submit" class="large" />
+                </ui:GroupBox>
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

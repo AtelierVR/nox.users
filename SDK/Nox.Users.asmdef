@@ -1,0 +1,18 @@
+{
+  "name": "Nox.Users",
+  "rootNamespace": "",
+  "references": [
+    "UniTask",
+    "Nox.Servers",
+    "Nox.CCK"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,31 @@
+﻿{
+  "type": "mod",
+  "id": "nox.users",
+  "provides": [
+    "fr.hactazia.users",
+    "users"
+  ],
+  "name": "Users",
+  "version": "1.0.0",
+  "description": "",
+  "license": "GPL-3.0",
+  "icon": null,
+  "contact": {
+    "email": "hactazia@gmail.com",
+    "source": "https://github.com/AtelierVR/nox.users",
+    "website": "https://nox.hactazia.fr/",
+    "issues": "https://github.com/AtelierVR/nox.users/issues"
+  },
+  "authors": [
+    {
+      "name": "Hactazia",
+      "email": "hactazia@gmail.com",
+      "website": "https://hactazia.fr/"
+    }
+  ],
+  "contributors": [],
+  "relations": [],
+  "entrypoints": {},
+  "references": [],
+  "permissions": []
+}
