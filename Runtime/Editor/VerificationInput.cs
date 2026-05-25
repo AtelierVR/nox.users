@@ -148,7 +148,7 @@ namespace Nox.Users.Runtime.Editor {
 
 			if (_server == null) {
 				SetEnabled(true, "No server selected.");
-				_panel.Address.SetActive(true);
+				_panel.Login.SetActive(false);
 				SetActive(false);
 				return;
 			}

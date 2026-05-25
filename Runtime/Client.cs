@@ -49,6 +49,8 @@ namespace Nox.Users.Runtime {
 				page = UserPage.OnGotoAction(menu, context.Data[2..]);
 			if (AuthServerPage.GetStaticKey() == key)
 				page = AuthServerPage.OnGotoAction(menu, context.Data[2..]);
+			if (AuthLoginWidget.GetStaticKey() == key)
+				page = AuthLoginWidget.OnGotoAction(menu, context.Data[2..]);
 			if (page == null) return;
 			Main.Instance.CoreAPI.EventAPI.Emit("menu_display", menu.Id, page);
 		}

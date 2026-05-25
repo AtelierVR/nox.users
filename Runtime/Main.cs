@@ -21,7 +21,7 @@ namespace Nox.Users.Runtime {
 
 		public static IServerAPI ServerAPI
 			=> Instance.CoreAPI.ModAPI
-				.GetMod("server")
+				.GetMod("servers")
 				?.GetInstance<IServerAPI>();
 
 		public static INetworkAPI NetworkAPI

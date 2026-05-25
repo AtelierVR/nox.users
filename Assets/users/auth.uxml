@@ -1,27 +1,29 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <Style src="project://database/Packages/nox.cck/Resources/nox.style.uss?fileID=7433441132597879392&amp;guid=956d93e835714844b98277f4fdbd77d3&amp;type=3#nox.style" />
-    <ui:VisualElement style="flex-grow: 1;">
+    <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
+
+        <!-- Left sidebar: server list with search -->
+        <ui:VisualElement name="servers-sidebar" style="width: 220px; flex-shrink: 0; border-right-width: 1px; border-right-color: rgb(50,50,50);">
+            <ui:VisualElement style="padding: 4px;">
+                <ui:TextField name="server-search" placeholder-text="Search servers..." style="margin-bottom: 2px;" />
+            </ui:VisualElement>
+            <ui:ScrollView name="server-scroll" style="flex-grow: 1;" />
+            <ui:Label name="servers-empty" text="No authentication servers configured." style="padding: 8px; white-space: normal; display: none; opacity: 0.5; font-size: 11px;" />
+        </ui:VisualElement>
+
+        <!-- Right: forms -->
         <ui:VisualElement style="flex-grow: 1; justify-content: center; align-items: center;">
 
-            <!-- Address step -->
-            <ui:VisualElement name="address" style="min-width: 300px; max-width: 400px; width: 100%;">
-                <ui:GroupBox class="p-8 m-0 border-b">
-                    <ui:Label text="Server Address" class="text-lg mb-8" />
-                    <ui:Label name="address_error" class="hidden" style="background-color: rgb(159,7,18); color: white; padding: 6px 12px; margin-bottom: 8px;" />
-                    <ui:VisualElement style="flex-direction: row;">
-                        <ui:TextField placeholder-text="https://server.example.com" name="address_input" class="large" style="flex-grow: 1;" />
-                        <ui:Button text="Connect" name="address_submit" class="large" style="min-width: 80px;" />
-                    </ui:VisualElement>
-                </ui:GroupBox>
+            <!-- No server selected placeholder -->
+            <ui:VisualElement name="no-server" style="align-items: center; opacity: 0.4;">
+                <ui:Label text="Select a server on the left to log in." />
             </ui:VisualElement>
 
             <!-- Login step -->
-            <ui:VisualElement name="login" style="min-width: 300px; max-width: 400px; width: 100%; display: none;">
+            <ui:VisualElement name="login" style="min-width: 280px; max-width: 400px; width: 100%; display: none;">
                 <ui:GroupBox class="p-8 m-0 border-b">
-                    <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 8px;">
-                        <ui:Button text="← Back" name="login_back" class="large" style="margin-right: 8px;" />
-                        <ui:Label text="Login" class="text-lg" style="flex-grow: 1;" />
-                    </ui:VisualElement>
+                    <ui:Label name="login-server-label" text="" class="text-xs" style="opacity: 0.6; margin-bottom: 4px;" />
+                    <ui:Label text="Login" class="text-lg mb-8" />
                     <ui:Label name="login_error" class="hidden" style="background-color: rgb(159,7,18); color: white; padding: 6px 12px; margin-bottom: 8px;" />
                     <ui:TextField placeholder-text="Identifier" name="login_identifier_input" class="large" style="margin-bottom: 4px;" />
                     <ui:TextField placeholder-text="Password" name="login_password_input" password="true" class="large" style="margin-bottom: 8px;" />
@@ -30,7 +32,7 @@
             </ui:VisualElement>
 
             <!-- Verification step -->
-            <ui:VisualElement name="verification" style="min-width: 300px; max-width: 400px; width: 100%; display: none;">
+            <ui:VisualElement name="verification" style="min-width: 280px; max-width: 400px; width: 100%; display: none;">
                 <ui:GroupBox class="p-8 m-0 border-b">
                     <ui:VisualElement style="flex-direction: row; align-items: center; margin-bottom: 8px;">
                         <ui:Button text="← Back" name="verification_back" class="large" style="margin-right: 8px;" />

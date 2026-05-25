@@ -25,7 +25,7 @@ namespace Nox.Users.Runtime.Clients {
 
 		private void OnClick()
 			=> Client.UiAPI?.SendGoto(
-				_mid, AuthServerPage.GetStaticKey()
+				_mid, AuthLoginWidget.GetStaticKey()
 			);
 
 		public Vector2Int GetSize()

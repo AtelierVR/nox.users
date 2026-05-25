@@ -33,6 +33,20 @@ MonoBehaviour:
       value: "Bio"
     - key: user.bio
       value: "{0}"
+    - key: auth.servers.title
+      value: "Servers"
+    - key: auth.no_servers
+      value: "No authentication servers configured."
+    - key: auth.login.title
+      value: "Login"
+    - key: auth.login.no_server
+      value: "Select a server on the left to log in."
+    - key: auth.login.server_address
+      value: "Server Address"
+    - key: auth.login.connect
+      value: "Connect"
+    - key: auth.login.sign_in
+      value: "Log in"
   - IETF: fr-FR
     entries:
     - key: user.search.data.title
@@ -51,4 +65,16 @@ MonoBehaviour:
       value: "{2}@{3}"
     - key: auth.servers.title
       value: "Serveurs"
+    - key: auth.no_servers
+      value: "Aucun serveur d'authentification configuré."
+    - key: auth.login.title
+      value: "Connexion"
+    - key: auth.login.no_server
+      value: "Sélectionnez un serveur à gauche pour vous connecter."
+    - key: auth.login.server_address
+      value: "Adresse du serveur"
+    - key: auth.login.connect
+      value: "Se connecter"
+    - key: auth.login.sign_in
+      value: "Se connecter"
 

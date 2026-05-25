@@ -28,7 +28,7 @@ namespace Nox.Users.Runtime.Editor {
 		private readonly AuthentificationPanel _panel;
 		private readonly IWindow              _window;
 		private          VisualElement        _root;
-		internal         AddressInput         Address;
+		internal         ServerListInput      ServerList;
 		internal         LoginInput           Login;
 		internal         VerificationInput    Verification;
 
@@ -48,11 +48,11 @@ namespace Nox.Users.Runtime.Editor {
 				.GetAsset<VisualTreeAsset>("auth.uxml")
 				.CloneTree();
 
-			Address      = new AddressInput(_root, this);
+			ServerList   = new ServerListInput(_root, this);
 			Login        = new LoginInput(_root, this);
 			Verification = new VerificationInput(_root, this);
 
-			Address.SetActive(true);
+			ServerList.SetActive(true);
 			Login.SetActive(false);
 			Verification.SetActive(false);
 

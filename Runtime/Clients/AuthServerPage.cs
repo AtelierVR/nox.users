@@ -124,14 +124,14 @@ namespace Nox.Users.Runtime.Clients {
 			}
 		}
 
-		public string[] GetAuthenticationServers() {
+		public static string[] GetAuthenticationServers() {
 			var x0 = Config.Load().Get("servers");
 			if (x0 == null) return Array.Empty<string>();
 			var x1 = x0.ToObject<Dictionary<string, JObject>>();
 			var x2 = new List<string>();
 			foreach (var (address, value) in x1) {
 				var features = value["features"]?.Values<string>().ToArray() ?? Array.Empty<string>();
-				if (!features.Contains("authentication")) continue;
+				if (!features.Contains("user")) continue;
 				x2.Add(address);
 			}
 
@@ -212,9 +212,20 @@ namespace Nox.Users.Runtime.Clients {
 
 	public class ServerItemComponent : MonoBehaviour {
 		public static (GameObject, ServerItemComponent) Generate(AuthServerComponent reference, RectTransform parent) {
-			var serverItem = Instantiate(Client.GetAsset<GameObject>("server:prefabs/server_item.prefab"), parent);
+			var (go, comp) = GenerateBase(parent);
+			comp.reference = reference;
+			return (go, comp);
+		}
+
+		public static (GameObject, ServerItemComponent) Generate(AuthLoginComponent reference, RectTransform parent) {
+			var (go, comp) = GenerateBase(parent);
+			comp.loginReference = reference;
+			return (go, comp);
+		}
+
+		private static (GameObject, ServerItemComponent) GenerateBase(RectTransform parent) {
+			var serverItem = Instantiate(Client.GetAsset<GameObject>("servers:prefabs/server_item.prefab"), parent);
 			var component  = serverItem.AddComponent<ServerItemComponent>();
-			component.reference = reference;
 			component.label     = Reference.GetComponent<TextLanguage>("label", serverItem);
 			component.text      = Reference.GetComponent<TextLanguage>("text", serverItem);
 			component.icon      = Reference.GetComponent<Image>("icon", serverItem);
@@ -225,6 +236,7 @@ namespace Nox.Users.Runtime.Clients {
 		}
 
 		public  AuthServerComponent       reference;
+		public  AuthLoginComponent        loginReference;
 		public  TextLanguage              label;
 		public  TextLanguage              text;
 		public  Button                    button;
@@ -244,7 +256,7 @@ namespace Nox.Users.Runtime.Clients {
 
 		private void OnClick() {
 			Nox.CCK.Utils.Logger.LogDebug($"Server {_server.GetAddress()} clicked");
-			// TODO: Implémenter l'action au clic (par exemple, ouvrir la page du serveur)
+			loginReference?.SelectServer(_server);
 		}
 
 		private async UniTask UpdateIcon(IServer server) {

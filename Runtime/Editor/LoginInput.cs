@@ -13,7 +13,9 @@ namespace Nox.Users.Runtime.Editor {
 	public class LoginInput : IDisposable {
 		private AuthentificationInstance _panel;
 		private VisualElement _container;
+		private VisualElement _noServer;
 		private Label _error;
+		private Label _serverLabel;
 		private TextField _inputIdentifier;
 		private TextField _inputPassword;
 		private Button _submit;
@@ -23,7 +25,9 @@ namespace Nox.Users.Runtime.Editor {
 		public LoginInput(VisualElement root, AuthentificationInstance panel) {
 			_panel           = panel;
 			_container       = root.Q<VisualElement>("login");
+			_noServer        = root.Q<VisualElement>("no-server");
 			_error           = root.Q<Label>("login_error");
+			_serverLabel     = root.Q<Label>("login-server-label");
 			_inputIdentifier = root.Q<TextField>("login_identifier_input");
 			_inputPassword   = root.Q<TextField>("login_password_input");
 			_submit          = root.Q<Button>("login_submit");
@@ -34,15 +38,18 @@ namespace Nox.Users.Runtime.Editor {
 			_inputIdentifier.RegisterCallback<NavigationSubmitEvent>(OnNavigationSubmit);
 			_inputPassword.RegisterCallback<KeyUpEvent>(OnKeyUp);
 			_inputPassword.RegisterCallback<NavigationSubmitEvent>(OnNavigationSubmit);
-			_back.RegisterCallback<ClickEvent>(OnBack);
+			_back?.RegisterCallback<ClickEvent>(OnBack);
 		}
 
 		public void SetActive(bool active) {
 			if (active) {
 				_container.style.display = DisplayStyle.Flex;
+				if (_noServer != null) _noServer.style.display = DisplayStyle.None;
 				_inputIdentifier.Focus();
-			} else
+			} else {
 				_container.style.display = DisplayStyle.None;
+				if (_noServer != null) _noServer.style.display = DisplayStyle.Flex;
+			}
 		}
 
 		private void OnKeyUp(KeyUpEvent evt) {
@@ -86,7 +93,7 @@ namespace Nox.Users.Runtime.Editor {
 			_inputIdentifier.UnregisterCallback<NavigationSubmitEvent>(OnNavigationSubmit);
 			_inputPassword.UnregisterCallback<KeyUpEvent>(OnKeyUp);
 			_inputPassword.UnregisterCallback<NavigationSubmitEvent>(OnNavigationSubmit);
-			_back.UnregisterCallback<ClickEvent>(OnBack);
+			_back?.UnregisterCallback<ClickEvent>(OnBack);
 
 			if (_cts != null) {
 				_cts.Cancel();
@@ -96,7 +103,9 @@ namespace Nox.Users.Runtime.Editor {
 			_cts             = null;
 			_panel           = null;
 			_container       = null;
+			_noServer        = null;
 			_error           = null;
+			_serverLabel     = null;
 			_inputIdentifier = null;
 			_inputPassword   = null;
 			_submit          = null;
@@ -126,7 +135,6 @@ namespace Nox.Users.Runtime.Editor {
 
 			_cts = null;
 
-			_panel.Address.SetActive(true);
 			SetActive(false);
 			SetEnabled(true);
 		}
@@ -139,7 +147,6 @@ namespace Nox.Users.Runtime.Editor {
 
 			if (_server == null) {
 				SetEnabled(true, "No server selected.");
-				_panel.Address.SetActive(true);
 				SetActive(false);
 				return;
 			}
@@ -198,8 +205,14 @@ namespace Nox.Users.Runtime.Editor {
 
 		private IServer _server;
 
-		public void SetServer(IServer server)
-			=> _server = server;
+		public void SetServer(IServer server) {
+			_server = server;
+			if (_serverLabel != null)
+				_serverLabel.text = server?.GetTitle() ?? server?.GetAddress() ?? string.Empty;
+			_inputIdentifier?.SetValueWithoutNotify(string.Empty);
+			_inputPassword?.SetValueWithoutNotify(string.Empty);
+			SetEnabled(true);
+		}
 	}
 }
 #endif
