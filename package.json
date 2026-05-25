@@ -1,5 +1,6 @@
 ﻿{
-  "name": "nox.users",
-  "displayName": "Nox - Users",
-  "version": "1.0.0"
+    "name":  "nox.users",
+    "displayName":  "Nox - Users",
+    "version":  "1.0.0",
+    "description":  "User profile, authentication, and account management API."
 }
