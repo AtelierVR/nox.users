@@ -27,7 +27,27 @@
     {
       "id": "search",
       "type": "recommends",
-      "version": "\u003e=1.0.0"
+      "version": ">=1.0.0"
+    },
+    {
+      "id": "ui",
+      "type": "depends",
+      "version": ">=1.0.0"
+    },
+    {
+      "id": "network",
+      "type": "depends",
+      "version": ">=1.0.0"
+    }
+  ],
+  "constraints": [
+    {
+      "type": "after",
+      "id": "ui"
+    },
+    {
+      "type": "after",
+      "id": "network"
     }
   ],
   "entrypoints": {
