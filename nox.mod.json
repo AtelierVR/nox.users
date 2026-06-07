@@ -31,6 +31,18 @@
       "register": "git+https://github.com/AtelierVR/nox.servers.git"
     },
     {
+      "id": "nox.table",
+      "type": "depends",
+      "version": ">=1.0.0",
+      "register": "git+https://github.com/AtelierVR/nox.table.git"
+    },
+    {
+      "id": "nox.worlds",
+      "type": "depends",
+      "version": ">=1.0.0",
+      "register": "git+https://github.com/AtelierVR/nox.worlds.git"
+    },
+    {
       "id": "com.unity.modules.uielements",
       "type": "depends",
       "version": ">=1.0.0",
