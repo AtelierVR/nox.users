@@ -16,8 +16,7 @@
         "Unity.TextMeshPro",
         "Nox.CCK.Users",
         "Nox.CCK.Network",
-        "Nox.Table",
-        "UnityEngine.UIElementsModule"
+        "Nox.Table"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
