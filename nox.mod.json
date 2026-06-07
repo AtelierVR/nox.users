@@ -25,28 +25,16 @@
   ],
   "relations": [
     {
-      "id": "nox.servers",
-      "type": "depends",
-      "version": ">=1.0.0",
-      "register": "git+https://github.com/AtelierVR/nox.servers.git"
-    },
-    {
-      "id": "nox.table",
+      "id": "table",
       "type": "depends",
       "version": ">=1.0.0",
       "register": "git+https://github.com/AtelierVR/nox.table.git"
     },
     {
-      "id": "nox.worlds",
+      "id": "worlds",
       "type": "depends",
       "version": ">=1.0.0",
       "register": "git+https://github.com/AtelierVR/nox.worlds.git"
-    },
-    {
-      "id": "com.unity.modules.uielements",
-      "type": "depends",
-      "version": ">=1.0.0",
-      "register": "upm:1.0.0"
     },
     {
       "id": "search",
