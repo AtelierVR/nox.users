@@ -25,24 +25,28 @@
   ],
   "relations": [
     {
-      "id": "server",
+      "id": "nox.servers",
       "type": "depends",
-      "version": ">=1.0.0"
+      "version": ">=1.0.0",
+      "register": "git+https://github.com/AtelierVR/nox.servers.git"
     },
     {
       "id": "ui",
       "type": "depends",
-      "version": ">=1.0.0"
+      "version": ">=1.0.0",
+      "register": "git+https://github.com/AtelierVR/nox.ui.git"
     },
     {
       "id": "search",
       "type": "depends",
-      "version": ">=1.0.0"
+      "version": ">=1.0.0",
+      "register": "git+https://github.com/AtelierVR/nox.search.git"
     },
     {
       "id": "network",
       "type": "depends",
-      "version": ">=1.0.0"
+      "version": ">=1.0.0",
+      "register": "git+https://github.com/AtelierVR/nox.network.git"
     }
   ],
   "constraints": [
