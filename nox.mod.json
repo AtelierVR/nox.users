@@ -25,6 +25,18 @@
   ],
   "relations": [
     {
+      "id": "nox.servers",
+      "type": "depends",
+      "version": ">=1.0.0",
+      "register": "git+https://github.com/AtelierVR/nox.servers.git"
+    },
+    {
+      "id": "com.unity.modules.uielements",
+      "type": "depends",
+      "version": ">=1.0.0",
+      "register": "upm:1.0.0"
+    },
+    {
       "id": "search",
       "type": "recommends",
       "version": ">=1.0.0"
