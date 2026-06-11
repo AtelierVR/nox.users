@@ -1,7 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <linker>
-	<assembly fullname="Nox.CCK.Users" preserve="all" />
-	<assembly fullname="Nox.Mods.Users" preserve="all" />
 	<assembly fullname="Nox.Users" preserve="all" />
 	<assembly fullname="Nox.Users.Runtime" preserve="all" />
 </linker>
