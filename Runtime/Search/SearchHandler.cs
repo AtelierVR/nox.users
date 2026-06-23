@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json.Linq;
-using Nox.CCK.Utils;
 using Nox.Search;
 using UnityEngine;
+using Nox.CCK.Search;
 
 namespace Nox.Users.Runtime.Search {
 	public class SearchHandler : IHandler {
@@ -33,20 +31,9 @@ namespace Nox.Users.Runtime.Search {
 		public string[] GetDescriptionArguments()
 			=> Array.Empty<string>();
 
-		public IWorker[] GetWorkers() {
-			var x0 = Config.Load().Get("servers");
-			if (x0 == null) return Array.Empty<IWorker>();
-			var x1 = x0.ToObject<Dictionary<string, JObject>>();
-			var x2 = new List<IWorker>();
-			foreach (var (address, value) in x1) {
-				var title    = value["title"]?.ToString();
-				var features = value["features"]?.Values<string>().ToArray() ?? Array.Empty<string>();
-				var search   = value["search"]?.ToObject<bool>()             ?? false;
-				if (!(search && features.Contains("user"))) continue;
-				x2.Add(new SearchWorker { Title = title, ServerAddress = address });
-			}
-
-			return x2.ToArray();
-		}
+		public IWorker[] GetWorkers()
+			=> SearchHelper.ServersBy("user")
+				.Select(s => new SearchWorker { Title = s.Title, ServerAddress = s.Address })
+				.ToArray<IWorker>();
 	}
 }
