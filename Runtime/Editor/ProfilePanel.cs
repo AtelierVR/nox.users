@@ -56,7 +56,8 @@ namespace Nox.Users.Runtime.Editor {
 				.CloneTree();
 			_root.style.flexGrow = 1;
 
-			var user = Main.Instance.Network.CurrentUser;
+			var user = Main.Instance?.Network?.CurrentUser;
+			if (user == null) return _root;
 
 			_root.Q<UnsignedIntegerField>("id").value = user.Id;
 			_root.Q<TextField>("server").value        = user.Server;
