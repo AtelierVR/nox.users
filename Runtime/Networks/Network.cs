@@ -460,7 +460,8 @@ namespace Nox.Users.Runtime.Networks {
 
 			var entry = await Main.TableAPI.Set(
 				e.Key,
-				JsonConvert.SerializeObject(e)
+				JsonConvert.SerializeObject(e),
+				"application/json+favorite"
 			);
 
 			if (entry != null)
