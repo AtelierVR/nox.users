@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using Nox.CCK.Language;
+using Nox.CCK.Search;
 using Nox.CCK.Utils;
 using Nox.Servers;
 using Nox.UI;
@@ -124,19 +124,10 @@ namespace Nox.Users.Runtime.Clients {
 			}
 		}
 
-		public static string[] GetAuthenticationServers() {
-			var x0 = Config.Load().Get("servers");
-			if (x0 == null) return Array.Empty<string>();
-			var x1 = x0.ToObject<Dictionary<string, JObject>>();
-			var x2 = new List<string>();
-			foreach (var (address, value) in x1) {
-				var features = value["features"]?.Values<string>().ToArray() ?? Array.Empty<string>();
-				if (!features.Contains("user")) continue;
-				x2.Add(address);
-			}
-
-			return x2.ToArray();
-		}
+		public static IEnumerable<string> GetAuthenticationServers()
+			=> SearchHelper
+				.ServersBy("user")
+				.Select(s => s.Address);
 
 		private void OnRefreshServersClicked()
 			=> UpdateServers().Forget();

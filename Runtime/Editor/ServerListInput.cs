@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using Nox.Servers;
 using Nox.Users.Runtime.Clients;
@@ -48,7 +49,7 @@ namespace Nox.Users.Runtime.Editor {
 			_scroll.Clear();
 			_empty.style.display = DisplayStyle.None;
 
-			var addresses = AuthServerComponent.GetAuthenticationServers();
+			var addresses = AuthServerComponent.GetAuthenticationServers().ToArray();
 			if (addresses.Length == 0) {
 				_empty.style.display = DisplayStyle.Flex;
 				return;
