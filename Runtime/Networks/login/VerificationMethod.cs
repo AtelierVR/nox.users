@@ -9,7 +9,7 @@ namespace Nox.Users.Runtime.Networks {
 		public string name;
 		public string description;
 		public bool enabled;
-		public bool can_send;
+		public VerificationMethodDetails details;
 
 		public string GetId()
 			=> type;
@@ -24,7 +24,10 @@ namespace Nox.Users.Runtime.Networks {
 			=> description;
 
 		public bool CanSend()
-			=> can_send;
+			=> details?.sendable ?? false;
+
+		public int GetCodeLength()
+			=> details?.code?.length ?? 6;
 
 		public bool IsTotp()
 			=> type == "totp";
@@ -34,5 +37,23 @@ namespace Nox.Users.Runtime.Networks {
 
 		public override string ToString()
 			=> $"{GetType().Name}[type={type}, name={name}, enabled={enabled}]";
+	}
+
+	[Serializable]
+	public class VerificationMethodDetails {
+		public bool sendable;
+		public VerificationMethodData data;
+		public VerificationMethodCode code;
+	}
+
+	[Serializable]
+	public class VerificationMethodData {
+		public int target;
+	}
+
+	[Serializable]
+	public class VerificationMethodCode {
+		public int length;
+		public string type;
 	}
 }

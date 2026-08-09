@@ -2,8 +2,10 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Nox.CCK.Network;
 using Nox.Servers;
 using Nox.Users.Runtime.Networks;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Logger = Nox.CCK.Utils.Logger;
@@ -15,6 +17,7 @@ namespace Nox.Users.Runtime.Editor {
 		private Label _error;
 		private TextField _input;
 		private Button _submit;
+		private Button _send;
 		private Button _back;
 		private DropdownField _method;
 		private Label _methodLabel;
@@ -27,12 +30,14 @@ namespace Nox.Users.Runtime.Editor {
 			_error             = root.Q<Label>("verification_error");
 			_input             = root.Q<TextField>("verification_input");
 			_submit            = root.Q<Button>("verification_submit");
+			_send              = root.Q<Button>("verification_send");
 			_back              = root.Q<Button>("verification_back");
 			_method            = root.Q<DropdownField>("verification_methods");
 			_methodLabel       = root.Q<Label>("verification_label");
 			_methodDescription = root.Q<Label>("verification_description");
 
 			_submit.RegisterCallback<ClickEvent>(OnSubmit);
+			_send.RegisterCallback<ClickEvent>(OnSendCode);
 			_input.RegisterCallback<KeyUpEvent>(OnKeyUp);
 			_input.RegisterCallback<NavigationSubmitEvent>(OnNavigationSubmit);
 			_back.RegisterCallback<ClickEvent>(OnBack);
@@ -60,6 +65,77 @@ namespace Nox.Users.Runtime.Editor {
 		private void UpdateMethodDetails(VerificationMethod method) {
 			_methodLabel.text       = method.GetTitle();
 			_methodDescription.text = method.GetDescription();
+			// Show send button for sendable methods (e.g. email), hide for TOTP
+			var canSend = method.CanSend();
+			_send.style.display = canSend ? DisplayStyle.Flex : DisplayStyle.None;
+		}
+
+		private void OnSendCode(ClickEvent evt) {
+			OnSendCode();
+			evt.StopPropagation();
+		}
+
+		private void OnSendCode() {
+			if (_cts != null) {
+				_cts.Cancel();
+				_cts.Dispose();
+			}
+			_cts = new CancellationTokenSource();
+			SendCodeAsync().AttachExternalCancellation(_cts.Token).Forget();
+		}
+
+		private async UniTask SendCodeAsync() {
+			if (_server == null || _request == null) return;
+			_send.SetEnabled(false);
+			var methodType = _method.value;
+			if (string.IsNullOrEmpty(methodType)) {
+				_send.SetEnabled(true);
+				return;
+			}
+
+			// Resolve the current method to get the target index
+			var method = Array.Find(
+				_verification?.Methods ?? Array.Empty<VerificationMethod>(),
+				m => m.type == methodType
+			);
+			var target = method?.details?.data?.target ?? 1;
+
+			try {
+				var req = await RequestNode.To(
+					_server.GetAddress(),
+					$"/auth/methods/{methodType}/send",
+					"POST"
+				);
+				if (req == null) {
+					SetError("Failed to send verification code.");
+					_send.SetEnabled(true);
+					return;
+				}
+				req.SetBody(JObject.FromObject(new { type = methodType, target }));
+				await req.Send(_cts.Token);
+				var response = await req.Node<JObject>(_cts.Token);
+				if (response.HasError()) {
+					SetError(response.Error?.Message ?? "Failed to send code.");
+				} else {
+					SetError(null);
+				}
+			} catch (OperationCanceledException) { }
+			catch (Exception e) {
+				Logger.LogError(new Exception($"Failed to send verification code: {e.Message}", e));
+				SetError("Failed to send code.");
+			}
+			_send.SetEnabled(true);
+		}
+
+		private void SetError(string err) {
+			if (string.IsNullOrEmpty(err)) {
+				_error.text          = string.Empty;
+				_error.style.display = DisplayStyle.None;
+			} else {
+				_error.text          = err;
+				_error.style.display = DisplayStyle.Flex;
+				Logger.LogWarning(err);
+			}
 		}
 
 		private void OnKeyUp(KeyUpEvent evt) {
@@ -91,6 +167,7 @@ namespace Nox.Users.Runtime.Editor {
 
 		public void Dispose() {
 			_submit.UnregisterCallback<ClickEvent>(OnSubmit);
+			_send.UnregisterCallback<ClickEvent>(OnSendCode);
 			_input.UnregisterCallback<KeyUpEvent>(OnKeyUp);
 			_input.UnregisterCallback<NavigationSubmitEvent>(OnNavigationSubmit);
 			_back.UnregisterCallback<ClickEvent>(OnBack);
@@ -107,6 +184,7 @@ namespace Nox.Users.Runtime.Editor {
 			_error             = null;
 			_input             = null;
 			_submit            = null;
+			_send              = null;
 			_back              = null;
 			_method            = null;
 			_methodLabel       = null;
@@ -116,15 +194,7 @@ namespace Nox.Users.Runtime.Editor {
 		private void SetEnabled(bool enabled, string err = null) {
 			_input.SetEnabled(enabled);
 			_submit.SetEnabled(enabled);
-
-			if (string.IsNullOrEmpty(err)) {
-				_error.text          = string.Empty;
-				_error.style.display = DisplayStyle.None;
-			} else {
-				_error.text          = err;
-				_error.style.display = DisplayStyle.Flex;
-				Logger.LogWarning(err);
-			}
+			SetError(err);
 		}
 
 		private void OnBack(ClickEvent evt) {

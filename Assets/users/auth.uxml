@@ -9,6 +9,10 @@
             </ui:VisualElement>
             <ui:ScrollView name="server-scroll" style="flex-grow: 1;" />
             <ui:Label name="servers-empty" text="No authentication servers configured." style="padding: 8px; white-space: normal; display: none; opacity: 0.5; font-size: 11px;" />
+            <ui:VisualElement name="manual-connect" style="padding: 4px; border-top-width: 1px; border-top-color: rgb(50,50,50); flex-direction: column; display: none;">
+                <ui:TextField name="manual-server-input" placeholder-text="Server URL (e.g. nox.example.com)" style="margin-bottom: 4px;" />
+                <ui:Button name="manual-connect-btn" text="Connect" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- Right: forms -->
@@ -43,7 +47,10 @@
                     <ui:Label name="verification_label" style="opacity: 0.7; margin-bottom: 4px;" />
                     <ui:TextField placeholder-text="Code" name="verification_input" class="large" style="margin-bottom: 4px;" />
                     <ui:Label name="verification_description" class="text-xs" style="opacity: 0.6; margin-bottom: 8px;" />
-                    <ui:Button text="Verify" name="verification_submit" class="large" />
+                    <ui:VisualElement style="flex-direction: row;">
+                        <ui:Button text="Verify" name="verification_submit" class="large" style="flex-grow: 1; margin-right: 4px;" />
+                        <ui:Button text="Send Code" name="verification_send" class="large" style="display: none;" />
+                    </ui:VisualElement>
                 </ui:GroupBox>
             </ui:VisualElement>
 
