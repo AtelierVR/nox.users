@@ -47,6 +47,14 @@ MonoBehaviour:
       value: "Connect"
     - key: auth.login.sign_in
       value: "Log in"
+    - key: auth.verification.title
+      value: "Two-Factor Authentication"
+    - key: auth.verification.send_code
+      value: "Send Code"
+    - key: auth.verification.submit
+      value: "Verify"
+    - key: auth.verification.back
+      value: "Back"
   - IETF: fr-FR
     entries:
     - key: user.search.data.title
@@ -77,4 +85,12 @@ MonoBehaviour:
       value: "Se connecter"
     - key: auth.login.sign_in
       value: "Se connecter"
+    - key: auth.verification.title
+      value: "Authentification à deux facteurs"
+    - key: auth.verification.send_code
+      value: "Envoyer le code"
+    - key: auth.verification.submit
+      value: "Vérifier"
+    - key: auth.verification.back
+      value: "Retour"
 

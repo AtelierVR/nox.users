@@ -335,7 +335,7 @@ namespace Nox.Users.Runtime.Networks {
 
 		}
 
-		public async UniTask<SendVerificationCodeResponse> SendVerificationCode(string type, string from = null, CancellationToken cancellationToken = default) {
+		public async UniTask<SendVerificationCodeResponse> SendVerificationCode(string type, string from = null, int target = 1, CancellationToken cancellationToken = default) {
 
 			var address = from ?? CurrentUser?.Server ?? ServerAddress;
 			if (string.IsNullOrEmpty(address)) {
@@ -343,12 +343,13 @@ namespace Nox.Users.Runtime.Networks {
 				return new SendVerificationCodeResponse { success = false, message = "No server address provided." };
 			}
 
-			var request = await RequestNode.To(address, $"/auth/{type}/send");
+			var request = await RequestNode.To(address, $"/auth/methods/{type}/send", Method.POST);
 			if (request == null) {
 				Logger.LogError($"Failed to create request for verification code");
 				return new SendVerificationCodeResponse { success = false, message = "Failed to create request" };
 			}
 
+			request.SetBody(JObject.FromObject(new { type, target }));
 			await request.Send(cancellationToken);
 			var response = await request.Node<SendVerificationCodeResponse>(cancellationToken);
 			if (response.HasError()) {

@@ -65,10 +65,24 @@ namespace Nox.Users.Runtime.Clients {
 		public Button         loginButton;
 		public TextLanguage   loginError;
 
+		// Verification form (right side, shown when 2FA is required)
+		public GameObject      verificationContainer;
+		public Button           verificationMethodButton;
+		public TextLanguage     verificationMethodLabel;
+		public TMP_InputField  verificationCodeField;
+		public Button           verificationSubmitButton;
+		public Button           verificationSendButton;
+		public Button           verificationBackButton;
+		public TextLanguage     verificationError;
+
 		private CancellationTokenSource              _serverTokenSource;
 		private CancellationTokenSource              _fetchTokenSource;
 		private CancellationTokenSource              _loginTokenSource;
+		private CancellationTokenSource              _verificationTokenSource;
 		private IServer                              _selectedServer;
+		private LoginRequest                         _pendingLoginRequest;
+		private VerificationRequired                 _pendingVerification;
+		private int                                  _selectedMethodIndex;
 		private readonly List<(IServer, ServerItemComponent)> _items = new();
 
 		// ── Server list ──────────────────────────────────────────────
@@ -139,6 +153,7 @@ namespace Nox.Users.Runtime.Clients {
 			_selectedServer = server;
 			loginContainer.SetActive(true);
 			noServerContainer.SetActive(false);
+			verificationContainer.SetActive(false);
 			identifierField.text = string.Empty;
 			passwordField.text   = string.Empty;
 			SetLoginEnabled(true);
@@ -201,10 +216,27 @@ namespace Nox.Users.Runtime.Clients {
 				PublicKey  = Crypto.CompressPublicKey(Crypto.GetKeys())
 			};
 
+			await SubmitLoginAsync(request);
+		}
+
+		private async UniTask SubmitLoginAsync(LoginRequest request) {
+			if (_selectedServer == null) {
+				SetLoginEnabled(true, "No server selected.");
+				return;
+			}
+
 			var result = await Main.Instance.Network.Login(request, _selectedServer.GetAddress());
 
 			if (result == null) {
 				SetLoginEnabled(true, "Login failed. Please try again.");
+				return;
+			}
+
+			// Check if verification (2FA) is required
+			if (result.IsVerificationRequired()) {
+				_pendingLoginRequest = request;
+				_pendingVerification = result.Verification;
+				ShowVerificationPanel();
 				return;
 			}
 
@@ -214,18 +246,180 @@ namespace Nox.Users.Runtime.Clients {
 				return;
 			}
 
-			if (result.IsVerificationRequired()) {
-				SetLoginEnabled(true, "Verification required — not yet supported in client.");
+			// Successful login
+			SetLoginEnabled(true);
+			Client.UiAPI?.SendAction(Page.GetMenu().Id, "back");
+		}
+
+		// ── Verification (2FA) ───────────────────────────────────────
+
+		private void ShowVerificationPanel() {
+			loginContainer.SetActive(false);
+			noServerContainer.SetActive(false);
+			verificationContainer.SetActive(true);
+			var cg = verificationContainer.GetComponent<CanvasGroup>();
+			if (cg != null) {
+				cg.alpha = 1;
+				cg.interactable = true;
+				cg.blocksRaycasts = true;
+			}
+
+			// Select first method by default
+			_selectedMethodIndex = 0;
+			if (_pendingVerification.Methods.Length > 0) {
+				var firstMethod = _pendingVerification.Methods[0];
+				UpdateMethodButtonLabel(firstMethod);
+				UpdateVerificationSendButton(firstMethod);
+			}
+
+			SetVerificationEnabled(true);
+			verificationCodeField.text = string.Empty;
+			verificationCodeField.ActivateInputField();
+		}
+
+		private void UpdateMethodButtonLabel(VerificationMethod method) {
+			verificationMethodLabel.UpdateText("value", new[] { method.GetTitle() });
+		}
+
+		private void UpdateVerificationSendButton(VerificationMethod method) {
+			verificationSendButton.gameObject.SetActive(method.CanSend());
+		}
+
+		private VerificationMethod GetSelectedVerificationMethod() {
+			if (_pendingVerification == null
+			    || _selectedMethodIndex < 0
+			    || _selectedMethodIndex >= _pendingVerification.Methods.Length)
+				return null;
+			return _pendingVerification.Methods[_selectedMethodIndex];
+		}
+
+		internal void OnVerificationMethodClicked() {
+			var menu = Page.GetMenu();
+			if (menu == null || _pendingVerification == null) return;
+
+			var builder = Client.UiAPI.MakeModal(menu);
+			if (builder == null) return;
+
+			var options = new Dictionary<string, string[]>();
+			for (var i = 0; i < _pendingVerification.Methods.Length; i++) {
+				var m = _pendingVerification.Methods[i];
+				options.Add(i.ToString(), new[] { "value", m.GetTitle() });
+			}
+
+			builder.SetTitle("auth.verification.title");
+			builder.SetClosable(true);
+			builder.SetOptions(OnMethodSelected, options);
+			builder.SetContent("empty");
+
+			var modal = builder.Build();
+			modal.OnClose.AddListener(() => modal.Dispose());
+			modal.Show();
+		}
+
+		private void OnMethodSelected(string indexStr) {
+			if (!int.TryParse(indexStr, out var idx)) return;
+			if (_pendingVerification == null || idx < 0 || idx >= _pendingVerification.Methods.Length) return;
+			_selectedMethodIndex = idx;
+			var method = _pendingVerification.Methods[idx];
+			UpdateMethodButtonLabel(method);
+			UpdateVerificationSendButton(method);
+		}
+
+		internal void OnSendVerificationCodeClicked() {
+			if (_verificationTokenSource != null) {
+				_verificationTokenSource.Cancel();
+				_verificationTokenSource.Dispose();
+			}
+			_verificationTokenSource = new CancellationTokenSource();
+			SendVerificationCodeAsync().AttachExternalCancellation(_verificationTokenSource.Token).Forget();
+		}
+
+		private async UniTask SendVerificationCodeAsync() {
+			SetVerificationEnabled(false);
+			var method = GetSelectedVerificationMethod();
+			if (method == null) {
+				SetVerificationEnabled(true, "No verification method selected.");
 				return;
 			}
 
+			var result = await Main.Instance.Network.SendVerificationCode(
+				method.type,
+				_selectedServer.GetAddress()
+			);
+
+			if (result == null || !result.IsSuccess()) {
+				SetVerificationEnabled(true, result?.GetMessage() ?? "Failed to send verification code.");
+				return;
+			}
+
+			SetVerificationEnabled(true);
+			verificationCodeField.ActivateInputField();
+		}
+
+		internal void OnVerificationSubmitClicked() {
+			if (_verificationTokenSource != null) {
+				_verificationTokenSource.Cancel();
+				_verificationTokenSource.Dispose();
+			}
+			_verificationTokenSource = new CancellationTokenSource();
+			VerifyAndLoginAsync().AttachExternalCancellation(_verificationTokenSource.Token).Forget();
+		}
+
+		private async UniTask VerifyAndLoginAsync() {
+			if (!verificationSubmitButton.interactable) return;
+
+			var code = verificationCodeField.text.Trim();
+			if (string.IsNullOrEmpty(code)) {
+				SetVerificationEnabled(true, "Verification code cannot be empty.");
+				verificationCodeField.ActivateInputField();
+				return;
+			}
+
+			SetVerificationEnabled(false);
+
+			_pendingLoginRequest.FactorCode = code;
+			await SubmitLoginAsync(_pendingLoginRequest);
+		}
+
+		internal void OnVerificationBackClicked() {
+			if (_verificationTokenSource != null) {
+				_verificationTokenSource.Cancel();
+				_verificationTokenSource.Dispose();
+			}
+			_verificationTokenSource = null;
+			_pendingLoginRequest      = null;
+			_pendingVerification      = null;
+			verificationContainer.SetActive(false);
+			var cg = verificationContainer.GetComponent<CanvasGroup>();
+			if (cg != null) {
+				cg.alpha = 0;
+				cg.interactable = false;
+				cg.blocksRaycasts = false;
+			}
+			loginContainer.SetActive(true);
 			SetLoginEnabled(true);
-			Client.UiAPI?.SendAction(Page.GetMenu().Id, "back");
+			passwordField.ActivateInputField();
+		}
+
+		private void SetVerificationEnabled(bool enabled, string error = null) {
+			verificationCodeField.interactable      = enabled;
+			verificationSubmitButton.interactable    = enabled;
+			verificationSendButton.interactable      = enabled;
+			verificationBackButton.interactable      = enabled;
+			verificationMethodButton.interactable    = enabled;
+
+			if (string.IsNullOrEmpty(error)) {
+				verificationError.gameObject.SetActive(false);
+			} else {
+				verificationError.UpdateText("value", new[] { error });
+				verificationError.gameObject.SetActive(true);
+			}
 		}
 
 		private void OnRefreshClicked() => UpdateServers().Forget();
 
 		internal void OnSearchSubmitClicked() {
+			if (searchField == null) return;
 			if (_fetchTokenSource != null) {
 				_fetchTokenSource.Cancel();
 				_fetchTokenSource.Dispose();
@@ -236,6 +430,7 @@ namespace Nox.Users.Runtime.Clients {
 		}
 
 		internal void OnFetchServerByAddressClicked() {
+			if (addressField == null) return;
 			if (_fetchTokenSource != null) {
 				_fetchTokenSource.Cancel();
 				_fetchTokenSource.Dispose();
@@ -308,6 +503,8 @@ namespace Nox.Users.Runtime.Clients {
 			_fetchTokenSource?.Dispose();
 			_loginTokenSource?.Cancel();
 			_loginTokenSource?.Dispose();
+			_verificationTokenSource?.Cancel();
+			_verificationTokenSource?.Dispose();
 		}
 
 		// ── Generate ─────────────────────────────────────────────────
@@ -456,6 +653,60 @@ namespace Nox.Users.Runtime.Clients {
 			component.loginButton.onClick.AddListener(component.OnLoginClicked);
 
 			component.loginContainer.SetActive(false);
+
+			// ── Center 3: Verification (2FA) ──────────────────────────
+			component.verificationContainer = Instantiate(centerAsset, rightContent);
+			var verificationBox = Instantiate(boxAsset, Reference.GetComponent<RectTransform>("content", component.verificationContainer));
+			Reference.GetComponent<TextLanguage>("text", verificationBox).UpdateText("auth.verification.title");
+			var verificationList = Instantiate(listAsset, Reference.GetComponent<RectTransform>("content", verificationBox));
+			var verificationListContent = Reference.GetComponent<RectTransform>("content", verificationList);
+
+			// Verification error text (hidden)
+			var verificationErrorGo = Instantiate(textAsset, verificationListContent);
+			component.verificationError = Reference.GetComponent<TextLanguage>("text", verificationErrorGo);
+			verificationErrorGo.SetActive(false);
+
+			// Method selection button (opens a modal on click)
+			var methodBtnGo = Instantiate(btnIconAsset, verificationListContent);
+			Reference.GetReference("image_container", methodBtnGo)?.SetActive(false);
+			component.verificationMethodButton = Reference.GetComponent<Button>("button", methodBtnGo);
+			component.verificationMethodLabel = Reference.GetComponent<TextLanguage>("text", methodBtnGo);
+			component.verificationMethodButton.onClick.AddListener(component.OnVerificationMethodClicked);
+
+			// Verification code input
+			var codeInput = Instantiate(inputFieldAsset, verificationListContent);
+			codeInput.AddComponent<LayoutElement>().preferredHeight = 40f;
+			Reference.GetReference("image_container", codeInput)?.SetActive(false);
+			component.verificationCodeField = Reference.GetComponent<TMP_InputField>("input", codeInput);
+			component.verificationCodeField.placeholder.GetComponent<TMP_Text>().text = "Verification code";
+
+			// Send code button (only shown for sendable methods like email)
+			var sendCodeBtn = Instantiate(btnIconAsset, verificationListContent);
+			Reference.GetReference("image_container", sendCodeBtn)?.SetActive(false);
+			Reference.GetComponent<TextLanguage>("text", sendCodeBtn)?.UpdateText("auth.verification.send_code");
+			component.verificationSendButton = Reference.GetComponent<Button>("button", sendCodeBtn);
+			component.verificationSendButton.onClick.AddListener(component.OnSendVerificationCodeClicked);
+
+			// Submit verification button
+			var submitVerificationBtn = Instantiate(btnIconAsset, verificationListContent);
+			Reference.GetReference("image_container", submitVerificationBtn)?.SetActive(false);
+			Reference.GetComponent<TextLanguage>("text", submitVerificationBtn)?.UpdateText("auth.verification.submit");
+			component.verificationSubmitButton = Reference.GetComponent<Button>("button", submitVerificationBtn);
+			component.verificationSubmitButton.onClick.AddListener(component.OnVerificationSubmitClicked);
+
+			// Back button
+			var backVerificationBtn = Instantiate(btnIconAsset, verificationListContent);
+			Reference.GetReference("image_container", backVerificationBtn)?.SetActive(false);
+			Reference.GetComponent<TextLanguage>("text", backVerificationBtn)?.UpdateText("auth.verification.back");
+			component.verificationBackButton = Reference.GetComponent<Button>("button", backVerificationBtn);
+			component.verificationBackButton.onClick.AddListener(component.OnVerificationBackClicked);
+
+			// Ensure verification container is fully hidden at start
+			var verificationCanvasGroup = component.verificationContainer.AddComponent<CanvasGroup>();
+			verificationCanvasGroup.alpha = 0;
+			verificationCanvasGroup.interactable = false;
+			verificationCanvasGroup.blocksRaycasts = false;
+			component.verificationContainer.SetActive(false);
 
 			// Start loading servers
 			component.UpdateServers().Forget();
