@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Nox.CCK.Language;
+using Nox.CCK.Network;
 using Nox.CCK.Utils;
 using Nox.UI;
 using Nox.UI.Widgets;
@@ -27,6 +28,8 @@ namespace Nox.Users.Runtime.Clients {
 		private GameObject        _content;
 		private Image             _icon;
 		private TextLanguage      _label;
+		private NetworkImage      _bannerNetworkImage;
+		private NetworkImage      _thumbnailNetworkImage;
 
 		private void OnClick()
 			=> Client.UiAPI?.SendGoto(
@@ -118,19 +121,19 @@ namespace Nox.Users.Runtime.Clients {
 				return;
 			}
 
-			var banner = await Main.NetworkAPI.FetchTexture(url);
-			if (!banner || banner.height == 0) {
-				_container.SetActive(false);
-				return;
-			}
-
-			_image.sprite = Sprite.Create(
-				banner,
-				new Rect(0, 0, banner.width, banner.height),
-				new Vector2(0.5f, 0.5f)
-			);
-			_ratio.aspectRatio = (float)banner.width / banner.height;
+			// Enable container so NetworkImage can start loading
 			_container.SetActive(true);
+
+			var networkImage = _image.GetOrAddComponent<NetworkImage>();
+			networkImage.OnSuccess.AddListener(texture => {
+				if (texture && texture.height > 0) {
+					_ratio.aspectRatio = (float)texture.width / texture.height;
+				}
+			});
+			networkImage.OnError.AddListener(_ => {
+				_container.SetActive(false);
+			});
+			networkImage.Url = url;
 		}
 
 		private async UniTask UpdateThumbnail(IUser user) {
@@ -141,19 +144,20 @@ namespace Nox.Users.Runtime.Clients {
 				return;
 			}
 
-			var thumbnail = await Main.NetworkAPI.FetchTexture(url);
-			if (!thumbnail || thumbnail.height == 0) {
-				await UpdateIcon();
-				return;
-			}
-
-			await UpdateIcon(
-				Sprite.Create(
-					thumbnail,
-					new Rect(0, 0, thumbnail.width, thumbnail.height),
-					new Vector2(0.5f, 0.5f)
-				)
-			);
+			var networkImage = _icon.GetOrAddComponent<NetworkImage>();
+			networkImage.OnSuccess.AddListener(async texture => {
+				if (texture && texture.height > 0) {
+					await UpdateIcon(
+						Sprite.Create(
+							texture,
+							new Rect(0, 0, texture.width, texture.height),
+							new Vector2(0.5f, 0.5f)
+						)
+					);
+				}
+			});
+			networkImage.OnError.AddListener(_ => UpdateIcon().Forget());
+			networkImage.Url = url;
 		}
 
 

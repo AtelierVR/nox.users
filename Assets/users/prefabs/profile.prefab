@@ -272,6 +272,7 @@ GameObject:
   - component: {fileID: 15638213668456908}
   - component: {fileID: 420801526282777738}
   - component: {fileID: 827472399401484873}
+  - component: {fileID: 4972263216309283147}
   m_Layer: 5
   m_Name: Image
   m_TagString: Untagged
@@ -336,6 +337,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4972263216309283147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 872139546701478536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f59cd1634d9964047b4f6c2b99ccd1c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Nox.CCK.Network::Nox.CCK.Network.NetworkImage
+  _url: 
+  _sizeMultiplier: 4
 --- !u!1 &1157867254865563790
 GameObject:
   m_ObjectHideFlags: 0
@@ -447,8 +462,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 378, y: -20.11}
-  m_SizeDelta: {x: 724, y: 0}
+  m_AnchoredPosition: {x: 452.875, y: -20.11}
+  m_SizeDelta: {x: 873.75, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5133651589725816242
 CanvasRenderer:
@@ -516,6 +531,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -968,8 +984,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 378, y: -53.16}
-  m_SizeDelta: {x: 724, y: 0}
+  m_AnchoredPosition: {x: 452.875, y: -53.16}
+  m_SizeDelta: {x: 873.75, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1576280623109520903
 CanvasRenderer:
@@ -1037,6 +1053,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1351,6 +1368,7 @@ GameObject:
   - component: {fileID: 5753818781347806704}
   - component: {fileID: 1687189975185449455}
   - component: {fileID: 7026110295880329387}
+  - component: {fileID: 4060662488084392978}
   m_Layer: 5
   m_Name: Image
   m_TagString: Untagged
@@ -1415,6 +1433,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4060662488084392978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4350468794294786213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f59cd1634d9964047b4f6c2b99ccd1c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Nox.CCK.Network::Nox.CCK.Network.NetworkImage
+  _url: 
+  _sizeMultiplier: 4
 --- !u!1 &4473993608694980946
 GameObject:
   m_ObjectHideFlags: 0
@@ -1526,7 +1558,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 567}
+  m_SizeDelta: {x: 0, y: 679.3125}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7239155616623011497
 CanvasRenderer:
@@ -1718,8 +1750,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 378, y: -648.7167}
-  m_SizeDelta: {x: 756, y: 0}
+  m_AnchoredPosition: {x: 452.875, y: -761.0292}
+  m_SizeDelta: {x: 905.75, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &3699755053049352134
 MonoBehaviour:
@@ -2191,8 +2223,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 378, y: -283.5}
-  m_SizeDelta: {x: 756, y: 0}
+  m_AnchoredPosition: {x: 452.875, y: -339.65625}
+  m_SizeDelta: {x: 905.75, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5923960361648472103
 CanvasRenderer:

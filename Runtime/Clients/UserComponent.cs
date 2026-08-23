@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using System.Threading;
 using Cysharp.Threading.Tasks;
 using Nox.CCK.Language;
+using Nox.CCK.Network;
 using Nox.CCK.Utils;
 using Nox.Users;
 using UnityEngine;
@@ -20,6 +20,8 @@ namespace Nox.Users.Runtime.Clients {
 		public AspectRatioFitter fitter;
 		public GameObject        bioContainer;
 		public TextLanguage      bioText;
+		private NetworkImage     _thumbnailNetworkImage;
+		private NetworkImage     _bannerNetworkImage;
 
 		public void UpdateContent(IUser user) {
 			if (user == null) return;
@@ -39,64 +41,35 @@ namespace Nox.Users.Runtime.Clients {
 				bioContainer.SetActive(true);
 			} else bioContainer.SetActive(false);
 
-			UpdateThumbnail(user).Forget();
-			UpdateBanner(user).Forget();
+			UpdateThumbnail(user);
+			UpdateBanner(user);
 		}
 
-		private CancellationTokenSource _thumbnailTokenSource;
-		private CancellationTokenSource _bannerTokenSource;
-
-		private async UniTask UpdateThumbnail(IUser user) {
-			if (_thumbnailTokenSource != null) {
-				_thumbnailTokenSource?.Cancel();
-				_thumbnailTokenSource?.Dispose();
+		private void UpdateThumbnail(IUser user) {
+			if (string.IsNullOrEmpty(user?.Thumbnail)) {
+				thumbnail.sprite = null;
+				return;
 			}
 
-			_thumbnailTokenSource = new CancellationTokenSource();
-			if (user?.Thumbnail != null) {
-				var texture = await Main.NetworkAPI
-					.FetchTexture(user.Thumbnail)
-					.AttachExternalCancellation(_thumbnailTokenSource.Token);
-				thumbnail.sprite = texture
-					? Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero)
-					: null;
-			} else thumbnail.sprite = null;
-
-			_thumbnailTokenSource = null;
+			_thumbnailNetworkImage = thumbnail.GetOrAddComponent<NetworkImage>();
+			_thumbnailNetworkImage.Url = user.Thumbnail;
 		}
 
-		private async UniTask UpdateBanner(IUser user) {
-			if (_bannerTokenSource != null) {
-				_bannerTokenSource?.Cancel();
-				_bannerTokenSource?.Dispose();
-			}
-
-			_bannerTokenSource = new CancellationTokenSource();
-			if (user?.Banner != null) {
-				var texture = await Main.NetworkAPI
-					.FetchTexture(user.Banner)
-					.AttachExternalCancellation(_bannerTokenSource.Token);
-				if (texture && texture.height > 0) {
-					banner.sprite      = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-					fitter.aspectRatio = (float)texture.width / texture.height;
-					if (fitter.aspectRatio <= 1.3333333333333333f) // 4:3 minimum
-						fitter.aspectRatio = 1.3333333333333333f;
-					if (fitter.aspectRatio >= 2.75f) // 11:4 maximum
-						fitter.aspectRatio = 2.75f;
-					withBanner.SetActive(true);
-					withoutBanner.SetActive(false);
-				} else {
-					banner.sprite = null;
-					withBanner.SetActive(false);
-					withoutBanner.SetActive(true);
-				}
-			} else {
+		private void UpdateBanner(IUser user) {
+			if (string.IsNullOrEmpty(user?.Banner)) {
 				banner.sprite = null;
 				withBanner.SetActive(false);
 				withoutBanner.SetActive(true);
+				return;
 			}
 
-			_bannerTokenSource = null;
+			_bannerNetworkImage = banner.GetOrAddComponent<NetworkImage>();
+			_bannerNetworkImage.Url = user.Banner;
+			// Note: AspectRatioFitter will be handled by the texture dimensions when loaded
+			// For now, we set a default aspect ratio
+			fitter.aspectRatio = 2.0f; // Default until texture loads
+			withBanner.SetActive(true);
+			withoutBanner.SetActive(false);
 		}
 
 		public void UpdateError(string error) {

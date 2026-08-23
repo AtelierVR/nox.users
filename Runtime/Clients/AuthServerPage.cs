@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Nox.CCK.Language;
+using Nox.CCK.Network;
 using Nox.CCK.Search;
 using Nox.CCK.Utils;
 using Nox.Servers;
@@ -233,7 +234,7 @@ namespace Nox.Users.Runtime.Clients {
 		public  Button                    button;
 		public  Image                     icon;
 		public  RectTransform             iconContainer;
-		private CancellationTokenSource   _iconTokenSource;
+		private NetworkImage              _iconNetworkImage;
 		private IServer                   _server;
 
 		public void UpdateContent(IServer server) {
@@ -242,7 +243,7 @@ namespace Nox.Users.Runtime.Clients {
 			text.UpdateText("value", new[] { server.GetAddress(), server.GetDescription() ?? "" });
 			
 			iconContainer.gameObject.SetActive(false);
-			UpdateIcon(server).Forget();
+			UpdateIcon(server);
 		}
 
 		private void OnClick() {
@@ -250,23 +251,17 @@ namespace Nox.Users.Runtime.Clients {
 			loginReference?.SelectServer(_server);
 		}
 
-		private async UniTask UpdateIcon(IServer server) {
-			if (_iconTokenSource != null) {
-				_iconTokenSource?.Cancel();
-				_iconTokenSource?.Dispose();
+		private void UpdateIcon(IServer server) {
+			var url = server?.GetIconUrl();
+			if (string.IsNullOrEmpty(url)) {
+				icon.sprite = null;
+				iconContainer.gameObject.SetActive(false);
+				return;
 			}
 
-			_iconTokenSource = new CancellationTokenSource();
-			var url = server?.GetIconUrl();
-			if (!string.IsNullOrEmpty(url)) {
-				var texture = await Main.NetworkAPI.FetchTexture(url, token: _iconTokenSource.Token);
-				icon.sprite = texture
-					? Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero)
-					: null;
-			} else icon.sprite = null;
-
-			iconContainer.gameObject.SetActive(icon.sprite);
-			_iconTokenSource = null;
+			_iconNetworkImage = icon.GetOrAddComponent<NetworkImage>();
+			_iconNetworkImage.Url = url;
+			iconContainer.gameObject.SetActive(true);
 		}
 	}
 }
