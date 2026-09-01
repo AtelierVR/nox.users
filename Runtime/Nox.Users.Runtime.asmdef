@@ -14,7 +14,6 @@
         "Nox.UI",
         "Nox.ModLoader",
         "Unity.TextMeshPro",
-        "Nox.CCK.Users",
         "Nox.CCK.Network",
         "Nox.Table",
         "Nox.CCK.Search"
