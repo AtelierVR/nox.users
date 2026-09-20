@@ -9,8 +9,6 @@ namespace Nox.Users {
 
 		public UniTask<IUser> Fetch(Identifier identifier);
 
-		public ISearchRequest MakeSearchRequest();
-
 		public UniTask<ISearchResponse> Search(ISearchRequest request, string from = null);
 
 		public UniTask<ISearchResponse> FetchFriends(uint offset = 0, uint limit = 50);
@@ -18,8 +16,6 @@ namespace Nox.Users {
 		public UniTask<IAuthToken> GetToken(string address);
 
 		public UniTask<ICurrentUser> UpdateCurrent(IUpdateCurrentUserRequest request);
-
-		public IUpdateCurrentUserRequest MakeUpdateCurrentRequest();
 		
 		/// <summary>
 		/// Adds a user to the favorites list.

@@ -36,46 +36,34 @@ namespace Nox.Users.Runtime.Networks {
 			return req;
 		}
 
-		public ISearchRequest SetQuery(string query) {
-			this.query = query;
-			return this;
+		public string Query {
+			get => query;
+			set => query = value;
 		}
 
-		public ISearchRequest SetIds(Identifier[] userIds) {
-			ids = userIds;
-			return this;
+		public Identifier[] Ids {
+			get => ids;
+			set => ids = value;
 		}
 
-		public ISearchRequest SetOffset(uint offset) {
-			this.offset = offset;
-			return this;
+		public uint Offset {
+			get => offset;
+			set => offset = value;
 		}
 
-		public ISearchRequest SetLimit(uint limit) {
-			this.limit = limit;
-			return this;
+		public uint Limit {
+			get => limit;
+			set => limit = value;
 		}
-
-		public string GetQuery()
-			=> query;
-
-		public Identifier[] GetIds()
-			=> ids;
-
-		public uint GetOffset()
-			=> offset;
-
-		public uint GetLimit()
-			=> limit;
 
 		public static SearchRequest FromBase(ISearchRequest request) {
 			if (request is SearchRequest sr)
 				return sr;
 			var req = new SearchRequest {
-				query  = request.GetQuery(),
-				ids    = request.GetIds()?.Distinct().ToArray(),
-				offset = request.GetOffset(),
-				limit  = request.GetLimit()
+				query  = request.Query,
+				ids    = request.Ids?.Distinct().ToArray(),
+				offset = request.Offset,
+				limit  = request.Limit
 			};
 			return req;
 		}

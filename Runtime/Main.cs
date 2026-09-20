@@ -91,9 +91,6 @@ namespace Nox.Users.Runtime {
 		public async UniTask<IUser> Fetch(Identifier identifier)
 			=> await Network.Fetch(identifier);
 
-		public ISearchRequest MakeSearchRequest()
-			=> new SearchRequest();
-
 		public async UniTask<ISearchResponse> Search(ISearchRequest request, string from = null)
 			=> await Network.Search(SearchRequest.FromBase(request), from);
 

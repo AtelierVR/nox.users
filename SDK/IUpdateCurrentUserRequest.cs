@@ -1,51 +1,108 @@
 namespace Nox.Users {
+	/// <summary>
+	/// Represents a request to update the profile of the authenticated user
+	/// (<c>POST /api/users/@me</c>).
+	///
+	/// Every member is optional. For nullable members an empty value means
+	/// "no change", <c>null</c> means "remove the stored value",
+	/// and any other value applies the change.
+	/// </summary>
 	public interface IUpdateCurrentUserRequest {
-		public IUpdateCurrentUserRequest SetUsername(string username);
+		/// <summary>
+		/// New unique username (lowercase letters, numbers, dots, hyphens and underscores).
+		/// Empty means no change.
+		/// </summary>
+		public string Username { get; set; }
 
-		public IUpdateCurrentUserRequest SetDisplay(string display);
+		/// <summary>
+		/// Display name.
+		/// Empty means no change, <c>null</c> removes it.
+		/// </summary>
+		public string Display { get; set; }
 
-		public IUpdateCurrentUserRequest SetEmail(string email);
+		/// <summary>
+		/// Biography text.
+		/// Empty means no change, <c>null</c> removes it.
+		/// </summary>
+		public string Bio { get; set; }
 
-		public IUpdateCurrentUserRequest SetPassword(string password);
+		/// <summary>
+		/// Pronouns.
+		/// Empty means no change, <c>null</c> removes them.
+		/// </summary>
+		public string Pronoun { get; set; }
 
-		public IUpdateCurrentUserRequest SetTwofaToken(string twofaToken);
+		/// <summary>
+		/// New email address.
+		/// Empty means no change, <c>null</c> removes it.
+		/// </summary>
+		public string Email { get; set; }
 
-		public IUpdateCurrentUserRequest SetBio(string bio);
+		/// <summary>
+		/// Current password, required when <see cref="Password"/> is set.
+		/// </summary>
+		public string CurrentPassword { get; set; }
 
-		public IUpdateCurrentUserRequest SetThumbnail(string thumbnail);
+		/// <summary>
+		/// New password (6 to 128 characters), requires <see cref="CurrentPassword"/>.
+		/// Empty means no change.
+		/// </summary>
+		public string Password { get; set; }
 
-		public IUpdateCurrentUserRequest SetBanner(string banner);
+		/// <summary>
+		/// TOTP two-factor code (6 digits), sent as <c>factor_code</c>.
+		/// Required for sensitive operations.
+		/// Empty means no change.
+		/// </summary>
+		public string TwofaToken { get; set; }
 
-		public IUpdateCurrentUserRequest SetLinks(string[] links);
+		/// <summary>
+		/// External links list.
+		/// Empty means no change, <c>null</c> clears it.
+		/// </summary>
+		public ILinkEntry[] Links { get; set; }
 
-		public IUpdateCurrentUserRequest SetHome(string home);
+		/// <summary>
+		/// Tags list (<c>usr:*</c> format).
+		/// Empty means no change, <c>null</c> clears it.
+		/// </summary>
+		public string[] Tags { get; set; }
 
-		public IUpdateCurrentUserRequest SetTags(string[] tags);
+		/// <summary>
+		/// Thumbnail URL.
+		/// Empty means no change, <c>null</c> removes it.
+		/// </summary>
+		public string Thumbnail { get; set; }
 
-		public IUpdateCurrentUserRequest SetAvatar(string avatar);
+		/// <summary>
+		/// Banner URL.
+		/// Empty means no change, <c>null</c> removes it.
+		/// </summary>
+		public string Banner { get; set; }
 
-		public string GetUsername();
+		/// <summary>
+		/// Home world identifier.
+		/// Empty means no change, <c>null</c> removes it.
+		/// </summary>
+		public string Home { get; set; }
 
-		public string GetDisplay();
+		/// <summary>
+		/// Active avatar identifier.
+		/// Empty means no change, <c>null</c> removes it.
+		/// </summary>
+		public string Avatar { get; set; }
 
-		public string GetEmail();
+		/// <summary>
+		/// Presence status, one of <c>oja</c>, <c>ojf</c>, <c>online</c>,
+		/// <c>busy</c>, <c>dnd</c>, <c>stream</c> or <c>offline</c>.
+		/// Empty means no change.
+		/// </summary>
+		public string Presence { get; set; }
 
-		public string GetPassword();
-
-		public string GetTwofaToken();
-
-		public string GetBio();
-
-		public string GetThumbnail();
-
-		public string GetBanner();
-
-		public string[] GetLinks();
-
-		public string GetHome();
-
-		public string GetAvatar();
-
-		public string[] GetTags();
+		/// <summary>
+		/// Custom presence status text.
+		/// Empty means no change, <c>null</c> removes it.
+		/// </summary>
+		public string PresenceStatus { get; set; }
 	}
 }

@@ -43,8 +43,8 @@ namespace Nox.Users.Runtime.Networks {
 			=> HasNext()
 				? await Main.Instance.Network.Search(
 					new SearchRequest {
-						query  = Request.GetQuery(),
-						ids    = Request.GetIds(),
+						query  = Request.Query,
+						ids    = Request.Ids,
 						offset = Offset + Limit,
 						limit  = Limit
 					},
@@ -56,8 +56,8 @@ namespace Nox.Users.Runtime.Networks {
 			=> HasPrevious()
 				? await Main.Instance.Network.Search(
 					new SearchRequest {
-						query  = Request.GetQuery(),
-						ids    = Request.GetIds(),
+						query  = Request.Query,
+						ids    = Request.Ids,
 						offset = Offset - Limit,
 						limit  = Limit
 					},

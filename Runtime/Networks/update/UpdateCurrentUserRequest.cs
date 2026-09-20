@@ -5,186 +5,101 @@ using Nox.Users;
 
 namespace Nox.Users.Runtime.Networks {
 	public class UpdateCurrentUserRequest : IUpdateCurrentUserRequest {
-		private string   _username   = string.Empty;
-		private string   _display    = string.Empty;
-		private string   _email      = string.Empty;
-		private string   _password   = string.Empty;
-		private string   _twofaToken = string.Empty;
-		private string   _bio        = string.Empty;
-		private string   _thumbnail  = string.Empty;
-		private string   _banner     = string.Empty;
-		private string[] _links      = Array.Empty<string>();
-		private string   _home       = string.Empty;
-		private string   _avatar     = string.Empty;
-		private string[] _tags       = Array.Empty<string>();
-
-		public IUpdateCurrentUserRequest SetUsername(string username) {
-			_username = username;
-			return this;
-		}
-
-		public IUpdateCurrentUserRequest SetDisplay(string display) {
-			_display = display;
-			return this;
-		}
-
-		public IUpdateCurrentUserRequest SetEmail(string email) {
-			_email = email;
-			return this;
-		}
-
-		public IUpdateCurrentUserRequest SetPassword(string password) {
-			_password = password;
-			return this;
-		}
-
-		public IUpdateCurrentUserRequest SetTwofaToken(string twofaToken) {
-			_twofaToken = twofaToken;
-			return this;
-		}
-
-		public IUpdateCurrentUserRequest SetBio(string bio) {
-			_bio = bio;
-			return this;
-		}
-
-		public IUpdateCurrentUserRequest SetThumbnail(string thumbnail) {
-			_thumbnail = thumbnail;
-			return this;
-		}
-
-		public IUpdateCurrentUserRequest SetBanner(string banner) {
-			_banner = banner;
-			return this;
-		}
-
-		public IUpdateCurrentUserRequest SetLinks(string[] links) {
-			_links = links ?? Array.Empty<string>();
-			return this;
-		}
-
-		public IUpdateCurrentUserRequest SetHome(string home) {
-			_home = home;
-			return this;
-		}
-
-		public IUpdateCurrentUserRequest SetTags(string[] tags) {
-			_tags = tags ?? Array.Empty<string>();
-			return this;
-		}
-
-		public IUpdateCurrentUserRequest SetAvatar(string avatar) {
-			_avatar = avatar;
-			return this;
-		}
-
-		public string GetUsername()
-			=> _username;
-
-		public string GetDisplay()
-			=> _display;
-
-		public string GetEmail()
-			=> _email;
-
-		public string GetPassword()
-			=> _password;
-
-		public string GetTwofaToken()
-			=> _twofaToken;
-
-		public string GetBio()
-			=> _bio;
-
-		public string GetThumbnail()
-			=> _thumbnail;
-
-		public string GetBanner()
-			=> _banner;
-
-		public string[] GetLinks()
-			=> _links ?? Array.Empty<string>();
-
-		public string GetHome()
-			=> _home;
-
-		public string GetAvatar()
-			=> _avatar;
-
-		public string[] GetTags()
-			=> _tags ?? Array.Empty<string>();
+		public string Username { get; set; } = string.Empty;
+		public string Display { get; set; } = string.Empty;
+		public string Bio { get; set; } = string.Empty;
+		public string Pronoun { get; set; } = string.Empty;
+		public string Email { get; set; } = string.Empty;
+		public string CurrentPassword { get; set; } = string.Empty;
+		public string Password { get; set; } = string.Empty;
+		public string TwofaToken { get; set; } = string.Empty;
+		public ILinkEntry[] Links { get; set; } = Array.Empty<ILinkEntry>();
+		public string[] Tags { get; set; } = Array.Empty<string>();
+		public string Thumbnail { get; set; } = string.Empty;
+		public string Banner { get; set; } = string.Empty;
+		public string Home { get; set; } = string.Empty;
+		public string Avatar { get; set; } = string.Empty;
+		public string Presence { get; set; } = string.Empty;
+		public string PresenceStatus { get; set; } = string.Empty;
 
 		public JObject ToJson() {
 			var obj = new JObject();
 
-			if (_username is { Length: > 0 })
-				obj["username"] = JValue.CreateString(_username);
+			// Identity and credentials: only sent when explicitly set.
+			if (Username is { Length: > 0 })
+				obj["username"] = JValue.CreateString(Username);
 
-			if (_display == null)
-				obj["display"] = JValue.CreateNull();
-			else if (_display.Length > 0)
-				obj["display"] = JValue.CreateString(_display);
-
-			if (_bio == null)
-				obj["bio"] = JValue.CreateNull();
-			else if (_bio.Length > 0)
-				obj["bio"] = JValue.CreateString(_bio);
-
-			if (_banner == null)
-				obj["banner"] = JValue.CreateNull();
-			else if (_banner.Length > 0)
-				obj["banner"] = JValue.CreateString(_banner);
-
-			if (_thumbnail == null)
-				obj["thumbnail"] = JValue.CreateNull();
-			else if (_thumbnail.Length > 0)
-				obj["thumbnail"] = JValue.CreateString(_thumbnail);
-
-			if (_email == null)
-				obj["email"] = JValue.CreateNull();
-			else if (_email.Length > 0)
-				obj["email"] = JValue.CreateString(_email);
-
-			if (_password is { Length: > 0 }) {
-				obj["password"]         = JValue.CreateString(_password);
-				obj["current_password"] = JValue.CreateString(_password);
+			// Password change: the current password is required alongside the new one.
+			if (Password is { Length: > 0 }) {
+				obj["password"] = JValue.CreateString(Password);
+				if (CurrentPassword is { Length: > 0 })
+					obj["current_password"] = JValue.CreateString(CurrentPassword);
 			}
 
-			if (_twofaToken is { Length: > 0 })
-				obj["twofa_token"] = JValue.CreateString(_twofaToken);
+			// TOTP two-factor code is named factor_code in the API.
+			if (TwofaToken is { Length: > 0 })
+				obj["factor_code"] = JValue.CreateString(TwofaToken);
 
-			if (_links is { Length: > 0 })
-				obj["links"] = new JArray(_links.ToArray<object>());
+			// Presence status: oja, ojf, online, busy, dnd, stream, offline
+			if (Presence is { Length: > 0 })
+				obj["presence"] = JValue.CreateString(Presence);
 
-			if (_home == null)
-				obj["home"] = JValue.CreateNull();
-			else if (_home is { Length: > 0 })
-				obj["home"] = JValue.CreateString(_home);
+			// Nullable fields: empty = no change, null = remove, other = set
+			SetNullable(obj, "display", Display);
+			SetNullable(obj, "bio", Bio);
+			SetNullable(obj, "pronoun", Pronoun);
+			SetNullable(obj, "email", Email);
+			SetNullable(obj, "thumbnail", Thumbnail);
+			SetNullable(obj, "banner", Banner);
+			SetNullable(obj, "home", Home);
+			SetNullable(obj, "avatar", Avatar);
+			SetNullable(obj, "presence_status", PresenceStatus);
 
-			if (_avatar == null)
-				obj["avatar"] = JValue.CreateNull();
-			else if (_avatar is { Length: > 0 })
-				obj["avatar"] = JValue.CreateString(_avatar);
+			// Collections: empty = no change, null = clear, other = set
+			if (Links == null)
+				obj["links"] = JValue.CreateNull();
+			else if (Links.Length > 0)
+				obj["links"] = new JArray(Links
+					.Where(link => link != null)
+					.Select(link => (object)new JObject {
+						["label"] = JValue.CreateString(link.Label ?? string.Empty),
+						["value"] = JValue.CreateString(link.Value ?? string.Empty)
+					})
+					.ToArray());
 
-			if (_tags is { Length: > 0 })
-				obj["tags"] = new JArray(_tags.ToArray<object>());
+			if (Tags == null)
+				obj["tags"] = JValue.CreateNull();
+			else if (Tags.Length > 0)
+				obj["tags"] = new JArray(Tags.Select(tag => (object)tag).ToArray());
 
 			return obj;
 		}
 
+		private static void SetNullable(JObject obj, string key, string value) {
+			if (value == null)
+				obj[key] = JValue.CreateNull();
+			else if (value.Length > 0)
+				obj[key] = JValue.CreateString(value);
+		}
+
 		public static UpdateCurrentUserRequest FromBase(IUpdateCurrentUserRequest request)
 			=> new() {
-				_username   = request.GetUsername(),
-				_display    = request.GetDisplay(),
-				_email      = request.GetEmail(),
-				_password   = request.GetPassword(),
-				_twofaToken = request.GetTwofaToken(),
-				_bio        = request.GetBio(),
-				_thumbnail  = request.GetThumbnail(),
-				_banner     = request.GetBanner(),
-				_links      = request.GetLinks(),
-				_home       = request.GetHome(),
-				_tags       = request.GetTags()
+				Username        = request.Username,
+				Display         = request.Display,
+				Bio             = request.Bio,
+				Pronoun         = request.Pronoun,
+				Email           = request.Email,
+				CurrentPassword = request.CurrentPassword,
+				Password        = request.Password,
+				TwofaToken      = request.TwofaToken,
+				Links           = request.Links,
+				Tags            = request.Tags,
+				Thumbnail       = request.Thumbnail,
+				Banner          = request.Banner,
+				Home            = request.Home,
+				Avatar          = request.Avatar,
+				Presence        = request.Presence,
+				PresenceStatus  = request.PresenceStatus
 			};
 	}
 }
