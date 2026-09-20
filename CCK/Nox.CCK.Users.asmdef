@@ -1,0 +1,20 @@
+{
+  "name": "Nox.CCK.Users",
+  "rootNamespace": "",
+  "references": [
+    "Nox.CCK",
+    "Nox.Users",
+    "Newtonsoft.Json"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
