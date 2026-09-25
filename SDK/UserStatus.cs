@@ -1,4 +1,6 @@
 using System;
+using UnityEngine;
+
 namespace Nox.Users {
 	/// <summary>
 	/// Represents the online status of a user.
@@ -92,6 +94,28 @@ namespace Nox.Users {
 				"stream"         => UserStatus.STREAM,
 				"offline"        => UserStatus.OFFLINE,
 				_                => throw new ArgumentOutOfRangeException(nameof(status), status, null)
+			};
+
+		/// <summary>
+		/// Converts a <see cref="UserStatus"/> to the colour used to display it (presence dot).
+		/// <para>
+		/// Tailwind 500 palette: `oja` cyan, `ojf` blue, `online` green, `busy` orange,
+		/// `dnd` red, `stream` violet, `offline` grey.
+		/// </para>
+		/// </summary>
+		/// <param name="status"></param>
+		/// <returns></returns>
+		public static Color ToColor(this UserStatus status)
+			=> status switch {
+				UserStatus.EVENTS         => new Color32(0x06, 0xB6, 0xD4, 0xFF), // oja     cyan-500
+				UserStatus.ONLINE_JOIN    => new Color32(0x3B, 0x82, 0xF6, 0xFF), // ojf     blue-500
+				UserStatus.PUBLIC         => new Color32(0x22, 0xC5, 0x5E, 0xFF), // online  green-500
+				UserStatus.ONLINE         => new Color32(0x22, 0xC5, 0x5E, 0xFF), // online  green-500
+				UserStatus.BUSY           => new Color32(0xF9, 0x73, 0x16, 0xFF), // busy    orange-500
+				UserStatus.DO_NOT_DISTURB => new Color32(0xEF, 0x44, 0x44, 0xFF), // dnd     red-500
+				UserStatus.STREAM         => new Color32(0x8B, 0x5C, 0xF6, 0xFF), // stream  violet-500
+				UserStatus.OFFLINE        => new Color32(0x6B, 0x72, 0x80, 0xFF), // offline gray-500
+				_                         => new Color32(0x6B, 0x72, 0x80, 0xFF), // offline gray-500
 			};
 
 	}
