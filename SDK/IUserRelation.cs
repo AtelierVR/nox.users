@@ -5,13 +5,15 @@ namespace Nox.Users {
 	/// </summary>
 	public interface IUserRelation {
 		/// <summary>
-		/// Gets the relationship status of the user with the current user.
+		/// Gets the relationship type of the user with the current user.
+		/// <see cref="UserRelationType.NONE"/> when there is no relationship.
 		/// </summary>
-		public string In { get; }
+		public UserRelationType In { get; }
 
 		/// <summary>
-		/// Gets the relationship status of the current user with the user.
+		/// Gets the relationship type of the current user with the user.
+		/// <see cref="UserRelationType.NONE"/> when there is no relationship.
 		/// </summary>
-		public string Out { get; }
+		public UserRelationType Out { get; }
 	}
 }

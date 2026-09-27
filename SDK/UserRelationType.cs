@@ -7,6 +7,11 @@ namespace Nox.Users {
 	/// </summary>
 	public enum UserRelationType {
 		/// <summary>
+		/// Represents the absence of relationship.
+		/// This is the default value, used when the relation is <c>null</c> on the wire.
+		/// </summary>
+		NONE,
+		/// <summary>
 		/// Represents a following relationship,
 		/// where one user follows another user.
 		/// </summary>
@@ -26,12 +31,18 @@ namespace Nox.Users {
 		/// <summary>
 		/// Converts a UserRelationType enum value
 		/// to its corresponding string representation.
+		/// <para>
+		/// <see cref="UserRelationType.NONE"/> is converted to <c>"none"</c>;
+		/// the relation is nullable on the wire, so the JSON converter
+		/// writes it back as <c>null</c>.
+		/// </para>
 		/// </summary>
 		/// <param name="type"></param>
 		/// <returns></returns>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public static string ToString(this UserRelationType type)
 			=> type switch {
+				UserRelationType.NONE    => "none",
 				UserRelationType.FOLLOW  => "follow",
 				UserRelationType.REQUEST => "request",
 				_                        => throw new ArgumentOutOfRangeException(nameof(type), type, null)
@@ -40,15 +51,20 @@ namespace Nox.Users {
 		/// <summary>
 		/// Converts a string representation of a user relation type
 		/// to its corresponding UserRelationType enum value.
+		/// <para>
+		/// <c>null</c>, an empty string or <c>"none"</c> are converted
+		/// to <see cref="UserRelationType.NONE"/>.
+		/// </para>
 		/// </summary>
 		/// <param name="str"></param>
 		/// <returns></returns>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public static UserRelationType FromString(string str)
 			=> str switch {
-				"follow"  => UserRelationType.FOLLOW,
-				"request" => UserRelationType.REQUEST,
-				_         => throw new ArgumentOutOfRangeException(nameof(str), str, null)
+				null or "" or "none" => UserRelationType.NONE,
+				"follow"            => UserRelationType.FOLLOW,
+				"request"           => UserRelationType.REQUEST,
+				_                   => throw new ArgumentOutOfRangeException(nameof(str), str, null)
 			};
 	}
 }

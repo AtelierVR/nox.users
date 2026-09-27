@@ -1,14 +1,13 @@
 using System;
 using Newtonsoft.Json;
-using Nox.Users;
 
 namespace Nox.Users.Runtime.Base {
 	[Serializable]
 	public class UserRelation : IUserRelation {
-		[JsonProperty("in")]
-		public string In { get; private set; }
+		[JsonProperty("in"), JsonConverter(typeof(UserRelationTypeConverter))]
+		public UserRelationType In { get; private set; }
 
-		[JsonProperty("out")]
-		public string Out { get; private set; }
+		[JsonProperty("out"), JsonConverter(typeof(UserRelationTypeConverter))]
+		public UserRelationType Out { get; private set; }
 	}
 }
