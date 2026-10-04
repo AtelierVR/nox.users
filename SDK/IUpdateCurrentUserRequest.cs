@@ -1,3 +1,5 @@
+using Nox.CCK.Utils;
+
 namespace Nox.Users {
 	/// <summary>
 	/// Represents a request to update the profile of the authenticated user
@@ -82,27 +84,20 @@ namespace Nox.Users {
 
 		/// <summary>
 		/// Home world identifier.
-		/// Empty means no change, <c>null</c> removes it.
+		/// <see cref="Identifier.Invalid"/> removes it, <see cref="Identifier.Default"/> means no change.
 		/// </summary>
-		public string Home { get; set; }
+		public Identifier Home { get; set; }
 
 		/// <summary>
 		/// Active avatar identifier.
-		/// Empty means no change, <c>null</c> removes it.
+		/// <see cref="Identifier.Invalid"/> removes it, <see cref="Identifier.Default"/> means no change.
 		/// </summary>
-		public string Avatar { get; set; }
+		public Identifier Avatar { get; set; }
 
 		/// <summary>
-		/// Presence status, one of <c>oja</c>, <c>ojf</c>, <c>online</c>,
-		/// <c>busy</c>, <c>dnd</c>, <c>stream</c> or <c>offline</c>.
-		/// Empty means no change.
+		/// Presence (status and custom text) to apply.
+		/// <c>null</c> means no change.
 		/// </summary>
-		public string Presence { get; set; }
-
-		/// <summary>
-		/// Custom presence status text.
-		/// Empty means no change, <c>null</c> removes it.
-		/// </summary>
-		public string PresenceStatus { get; set; }
+		public IUpdatePresence Presence { get; set; }
 	}
 }

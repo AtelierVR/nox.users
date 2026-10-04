@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using Newtonsoft.Json.Linq;
-using Nox.Users;
+using Nox.CCK.Utils;
 
 namespace Nox.Users.Runtime.Networks {
 	public class UpdateCurrentUserRequest : IUpdateCurrentUserRequest {
@@ -17,10 +17,9 @@ namespace Nox.Users.Runtime.Networks {
 		public string[] Tags { get; set; } = Array.Empty<string>();
 		public string Thumbnail { get; set; } = string.Empty;
 		public string Banner { get; set; } = string.Empty;
-		public string Home { get; set; } = string.Empty;
-		public string Avatar { get; set; } = string.Empty;
-		public string Presence { get; set; } = string.Empty;
-		public string PresenceStatus { get; set; } = string.Empty;
+		public Identifier Home { get; set; } = Identifier.Default;
+		public Identifier Avatar { get; set; } = Identifier.Default;
+		public IUpdatePresence Presence { get; set; }
 
 		public JObject ToJson() {
 			var obj = new JObject();
@@ -40,9 +39,11 @@ namespace Nox.Users.Runtime.Networks {
 			if (TwofaToken is { Length: > 0 })
 				obj["factor_code"] = JValue.CreateString(TwofaToken);
 
-			// Presence status: oja, ojf, online, busy, dnd, stream, offline
-			if (Presence is { Length: > 0 })
-				obj["presence"] = JValue.CreateString(Presence);
+			// Presence: status (event, public, online, busy, dnd, stream, offline) and custom text
+			if (Presence != null && Presence?.Status is not UserStatus.NONE)
+				obj["presence"] = JValue.CreateString(UserStatusExtensions.ToString(Presence.Status));
+			if (Presence != null)
+				SetNullable(obj, "presence_status", Presence.Text);
 
 			// Nullable fields: empty = no change, null = remove, other = set
 			SetNullable(obj, "display", Display);
@@ -51,9 +52,8 @@ namespace Nox.Users.Runtime.Networks {
 			SetNullable(obj, "email", Email);
 			SetNullable(obj, "thumbnail", Thumbnail);
 			SetNullable(obj, "banner", Banner);
-			SetNullable(obj, "home", Home);
-			SetNullable(obj, "avatar", Avatar);
-			SetNullable(obj, "presence_status", PresenceStatus);
+			SetIdentifier(obj, "home", Home);
+			SetIdentifier(obj, "avatar", Avatar);
 
 			// Collections: empty = no change, null = clear, other = set
 			if (Links == null)
@@ -82,6 +82,15 @@ namespace Nox.Users.Runtime.Networks {
 				obj[key] = JValue.CreateString(value);
 		}
 
+		private static void SetIdentifier(JObject obj, string key, Identifier? value) {
+			// Identifier.Invalid is equivalent to null: it removes the stored value.
+			if (value == null || value.Value.Equals(Identifier.Invalid))
+				obj[key] = JValue.CreateNull();
+			// A valid identifier sets it; Identifier.Default (the unset sentinel) means no change.
+			else if (value.Value.IsValid())
+				obj[key] = JValue.CreateString(value.Value.ToString());
+		}
+
 		public static UpdateCurrentUserRequest FromBase(IUpdateCurrentUserRequest request)
 			=> new() {
 				Username        = request.Username,
@@ -98,8 +107,7 @@ namespace Nox.Users.Runtime.Networks {
 				Banner          = request.Banner,
 				Home            = request.Home,
 				Avatar          = request.Avatar,
-				Presence        = request.Presence,
-				PresenceStatus  = request.PresenceStatus
+				Presence        = request.Presence
 			};
 	}
 }
