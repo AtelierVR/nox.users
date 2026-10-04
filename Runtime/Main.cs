@@ -68,9 +68,43 @@ namespace Nox.Users.Runtime {
 				request.SetRequestHeader("X-Nox-User", uid);
 		}
 
-		public void OnPostInitializeMain() { }
+		public void OnPostInitializeMain() {
+			ServerAPI?.OnSocketConnected.AddListener(OnSocketConnected);
+			RegisterServerEvents();
+		}
+
+		private IServerSocket _registeredSocket;
+
+		/// <summary>
+		/// (Re)registers the socket handlers: a fresh <see cref="IServerSocket"/> is created on each
+		/// connection, so the handler is attached once per socket instance (handlers persist across
+		/// a reconnect of the same socket).
+		/// </summary>
+		private void OnSocketConnected()
+			=> RegisterServerEvents();
+
+		private void RegisterServerEvents() {
+			var socket = ServerAPI?.Current;
+			if (socket == null || ReferenceEquals(socket, _registeredSocket))
+				return;
+
+			_registeredSocket = socket;
+			socket.On<ServerEvent>("event", OnServerPacket);
+		}
+
+		/// <summary>
+		/// Routes the server <c>user:update</c> event: <see cref="Networks.Network.ApplyUserUpdate"/> decides,
+		/// from the current user identifier, whether to emit <c>user_update</c> or <c>user_fetch</c>.
+		/// </summary>
+		private void OnServerPacket(SocketPacket<ServerEvent> packet) {
+			if (packet?.payload?.Name != "user:update")
+				return;
+
+			Network.ApplyUserUpdate(packet.payload.Data);
+		}
 
 		public void OnDisposeMain() {
+			ServerAPI?.OnSocketConnected.RemoveListener(OnSocketConnected);
 			RequestNode.OnCreated.RemoveListener(OnBeforeRequest);
 			_search.Dispose();
 			Network.Dispose();

@@ -84,6 +84,31 @@ namespace Nox.Users.Runtime.Networks {
 			InvokeUpdate(user);
 		}
 
+		/// <summary>
+		/// Applies a <c>user:update</c> pushed by the server. When the identifier matches the current
+		/// user, the profile is refreshed and <c>user_update</c> (+ <c>user_fetch</c>) is emitted;
+		/// otherwise only <c>user_fetch</c> is emitted for that user.
+		/// </summary>
+		public void ApplyUserUpdate(JToken data) {
+			if (data == null)
+				return;
+
+			var identifier = new Identifier(
+				"u",
+				data["id"]?.Value<uint>() ?? 0u,
+				null,
+				data["server"]?.Value<string>()
+			);
+
+			if (CurrentUser != null && identifier.Equals(CurrentUser.Identifier)) {
+				CurrentUser = data.ToObject<CurrentUser>();
+				InvokeUpdate(CurrentUser);
+				return;
+			}
+
+			InvokeFetch(data.ToObject<User>());
+		}
+
 		public UniTask<User> Fetch(Identifier identifier, string from = null, CancellationToken cancellationToken = default)
 			=> Fetch(identifier.ToString(), from, cancellationToken);
 
