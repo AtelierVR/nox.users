@@ -511,7 +511,7 @@ namespace Nox.Users.Runtime.Clients {
 
 		public static (GameObject, AuthLoginComponent) Generate(AuthLoginWidget page, RectTransform parent) {
 			var content   = Instantiate(Client.GetAsset<GameObject>("ui:prefabs/split.prefab"), parent);
-			content.name  = $"[{page.GetKey()}_{content.GetEntityId().GetHashCode()}]";
+			content.name  = $"[{page.GetKey()}_{content.GetId()}]";
 			var component = content.AddComponent<AuthLoginComponent>();
 			component.Page = page;
 

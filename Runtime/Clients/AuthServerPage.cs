@@ -151,7 +151,7 @@ namespace Nox.Users.Runtime.Clients {
 
 			var component = content.AddComponent<AuthServerComponent>();
 			component.Page = page;
-			content.name   = $"[{page.GetKey()}_{content.GetEntityId().GetHashCode()}]";
+			content.name   = $"[{page.GetKey()}_{content.GetId()}]";
 
 			var splitContent = Reference.GetComponent<RectTransform>("content", content);
 

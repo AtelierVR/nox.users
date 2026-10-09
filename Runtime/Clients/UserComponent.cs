@@ -1,11 +1,7 @@
-using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using Nox.CCK.Language;
 using Nox.CCK.Network;
 using Nox.CCK.Utils;
-using Nox.Users;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Nox.Users.Runtime.Clients {
@@ -97,7 +93,7 @@ namespace Nox.Users.Runtime.Clients {
 
 			var component = content.AddComponent<UserComponent>();
 			component.Page = userPage;
-			content.name   = $"[{userPage.GetKey()}_{content.GetEntityId().GetHashCode()}]";
+			content.name   = $"[{userPage.GetKey()}_{content.GetId()}]";
 
 			var splitContent   = Reference.GetComponent<RectTransform>("content", content);
 			var containerAsset = Client.GetAsset<GameObject>("ui:prefabs/container.prefab");
