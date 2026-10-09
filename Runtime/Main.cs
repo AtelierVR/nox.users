@@ -147,6 +147,12 @@ namespace Nox.Users.Runtime {
 			=> await Network.RemoveFavorite(identifier);
 
 		public async UniTask<IFavorites> GetFavorites()
-			=> (await Network.FetchFavorites());
+			=> await Network.FetchFavorites();
+
+		public async UniTask<bool> Follow(Identifier identifier)
+			=> await Network.Follow(identifier);
+
+		public async UniTask<bool> Unfollow(Identifier identifier)
+			=> await Network.Unfollow(identifier);
 	}
 }

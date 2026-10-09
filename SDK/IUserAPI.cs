@@ -36,5 +36,19 @@ namespace Nox.Users {
 		/// </summary>
 		/// <returns></returns>
 		public UniTask<IFavorites> GetFavorites();
+
+		/// <summary>
+		/// Follows a user, or sends a follow request when the target requires approval.
+		/// </summary>
+		/// <param name="identifier">Identifier of the user to follow.</param>
+		/// <returns><c>true</c> when the action succeeded.</returns>
+		public UniTask<bool> Follow(Identifier identifier);
+
+		/// <summary>
+		/// Removes an existing follow or cancels a pending follow request.
+		/// </summary>
+		/// <param name="identifier">Identifier of the user to unfollow.</param>
+		/// <returns><c>true</c> when the action succeeded.</returns>
+		public UniTask<bool> Unfollow(Identifier identifier);
 	}
 }

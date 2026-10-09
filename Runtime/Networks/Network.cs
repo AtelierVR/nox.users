@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -7,10 +8,7 @@ using Newtonsoft.Json.Linq;
 using Nox.CCK.Convertors;
 using Nox.CCK.Network;
 using Nox.CCK.Utils;
-using Nox.Users;
-using Nox.Users.Runtime;
 using Nox.Users.Runtime.Base;
-using Nox.Users.Runtime.Networks;
 using UnityEngine.Events;
 using static Nox.CCK.Network.RequestExtension;
 using Logger = Nox.CCK.Utils.Logger;
@@ -143,6 +141,62 @@ namespace Nox.Users.Runtime.Networks {
 			return user;
 		}
 
+		/// <summary>
+		/// Follows a user, or sends a follow request when the target requires approval
+		/// (<c>POST /users/{id}/follow</c>).
+		/// </summary>
+		public async UniTask<bool> Follow(Identifier identifier, CancellationToken cancellationToken = default) {
+			var address = CurrentUser?.Server ?? ServerAddress;
+			if (string.IsNullOrEmpty(address)) {
+				Logger.LogError("Cannot follow user: no server address provided.");
+				return false;
+			}
+
+			var request = await RequestNode.To(address, $"/users/{identifier.ToString(address)}/follow", Method.POST);
+			if (request == null) {
+				Logger.LogError($"Failed to create request to follow {identifier}");
+				return false;
+			}
+
+			await request.Send(cancellationToken);
+			var response = await request.Node<RelationResponse>(cancellationToken);
+			if (response.HasError()) {
+				Logger.LogError($"Failed to follow {identifier}: {response.Error?.Message ?? "unknown error"}");
+				return false;
+			}
+
+			Main.Instance.CoreAPI.EventAPI.Emit("user_relation_changed", identifier);
+			return true;
+		}
+
+		/// <summary>
+		/// Removes an existing follow or cancels a pending follow request
+		/// (<c>POST /users/{id}/unfollow</c>).
+		/// </summary>
+		public async UniTask<bool> Unfollow(Identifier identifier, CancellationToken cancellationToken = default) {
+			var address = CurrentUser?.Server ?? ServerAddress;
+			if (string.IsNullOrEmpty(address)) {
+				Logger.LogError("Cannot unfollow user: no server address provided.");
+				return false;
+			}
+
+			var request = await RequestNode.To(address, $"/users/{identifier.ToString(address)}/unfollow", Method.POST);
+			if (request == null) {
+				Logger.LogError($"Failed to create request to unfollow {identifier}");
+				return false;
+			}
+
+			await request.Send(cancellationToken);
+			var response = await request.Node<SuccessResponse>(cancellationToken);
+			if (response.HasError()) {
+				Logger.LogError($"Failed to unfollow {identifier}: {response.Error?.Message ?? "unknown error"}");
+				return false;
+			}
+
+			Main.Instance.CoreAPI.EventAPI.Emit("user_relation_changed", identifier);
+			return true;
+		}
+
 		public async UniTask<SearchResponse> Search(SearchRequest data, string from = null, CancellationToken cancellationToken = default) {
 			var address = from ?? CurrentUser?.Server ?? ServerAddress;
 			if (string.IsNullOrEmpty(address)) {
@@ -233,10 +287,62 @@ namespace Nox.Users.Runtime.Networks {
 			var friends = response.Data;
 			friends.Server = address;
 
+			// The endpoint returns follow relations, not users: resolve the other side of
+			// each relation into an actual user before exposing them.
+			friends.Items = await ResolveFriends(friends, address, cancellationToken);
+
 			foreach (var user in friends.Items ?? System.Array.Empty<User>())
 				InvokeFetch(user);
 
 			return friends;
+		}
+
+		/// <summary>
+		/// Resolves the friend relations of a <see cref="FriendsResponse"/> into users.
+		/// Friends living on another server are resolved against their own server.
+		/// </summary>
+		private async UniTask<User[]> ResolveFriends(FriendsResponse friends, string address, CancellationToken cancellationToken = default) {
+			var relations = friends?.Relations ?? System.Array.Empty<FriendsResponse.FriendRelation>();
+			if (relations.Length == 0)
+				return System.Array.Empty<User>();
+
+			var identifiers = new List<Identifier>(relations.Length);
+			foreach (var relation in relations) {
+				var friend = relation?.Friend;
+				if (string.IsNullOrEmpty(friend))
+					continue;
+				var identifier = Identifier.Parse(friend);
+				// The API returns bare identifiers (e.g. "2@hactazia.fr"), normalise the type.
+				if (string.IsNullOrEmpty(identifier.Type))
+					identifier = new Identifier("u", identifier.Id, identifier.Query, identifier.Server);
+				if (!identifiers.Contains(identifier))
+					identifiers.Add(identifier);
+			}
+
+			if (identifiers.Count == 0)
+				return Array.Empty<User>();
+
+			var users = new List<User>(identifiers.Count);
+			foreach (var group in identifiers.GroupBy(i => i.IsLocal(address) ? address : i.Server)) {
+				var server = group.Key;
+				if (string.IsNullOrEmpty(server))
+					continue;
+				var ids = group
+					.Select(i => i.IsLocal(address) ? new Identifier(i.Type, i.Id, i.Query, address) : i)
+					.ToArray();
+				var response = await Search(
+					new SearchRequest {
+						ids   = ids,
+						limit = (uint)ids.Length
+					},
+					server,
+					cancellationToken
+				);
+				if (response?.Items != null)
+					users.AddRange(response.Items);
+			}
+
+			return users.ToArray();
 		}
 
 		public void Dispose() {
@@ -246,6 +352,18 @@ namespace Nox.Users.Runtime.Networks {
 		[Serializable]
 		internal class LogoutResponse {
 			public bool success;
+		}
+
+		[Serializable]
+		internal class SuccessResponse {
+			public bool success;
+		}
+
+		[Serializable]
+		internal class RelationResponse {
+			public string type;
+			public string initiator;
+			public string target;
 		}
 
 		public async UniTask<LoginResponse> Login(LoginRequest form, string address, CancellationToken cancellationToken = default) {
