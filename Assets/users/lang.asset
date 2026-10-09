@@ -55,6 +55,38 @@ MonoBehaviour:
       value: "Verify"
     - key: auth.verification.back
       value: "Back"
+    - key: user.about.title
+      value: "About {0}"
+    - key: user.about.actions
+      value: "Actions"
+    - key: user.favorite.none
+      value: "Add to Favorites"
+    - key: user.favorite.add
+      value: "Add to Favorites"
+    - key: user.favorite.remove
+      value: "Remove from Fav."
+    - key: user.favorite.star
+      value: "Remove from Fav."
+    - key: user.follow.none
+      value: "Add Friend"
+    - key: user.follow.add
+      value: "Add Friend"
+    - key: user.follow.requested
+      value: "Requested"
+    - key: user.follow.cancel
+      value: "Cancel Request"
+    - key: user.follow.friends
+      value: "Friends"
+    - key: user.follow.remove
+      value: "Remove Friend"
+    - key: user.invite.send
+      value: "Send Invite"
+    - key: user.invite.request
+      value: "Request Invite"
+    - key: user.loading
+      value: "Loading..."
+    - key: user.error
+      value: "User not found"
   - IETF: fr-FR
     entries:
     - key: user.search.data.title
@@ -71,6 +103,10 @@ MonoBehaviour:
       value: "{0}"
     - key: user.identifier
       value: "{2}@{3}"
+    - key: user.about.bio
+      value: "Biographie"
+    - key: user.bio
+      value: "{0}"
     - key: auth.servers.title
       value: "Serveurs"
     - key: auth.no_servers
@@ -93,4 +129,36 @@ MonoBehaviour:
       value: "Vérifier"
     - key: auth.verification.back
       value: "Retour"
+    - key: user.about.title
+      value: "À propos de {0}"
+    - key: user.about.actions
+      value: "Actions"
+    - key: user.favorite.none
+      value: "Ajouter aux favoris"
+    - key: user.favorite.add
+      value: "Ajouter aux favoris"
+    - key: user.favorite.remove
+      value: "Retirer des fav."
+    - key: user.favorite.star
+      value: "Retirer des fav."
+    - key: user.follow.none
+      value: "Ajouter en ami"
+    - key: user.follow.add
+      value: "Ajouter en ami"
+    - key: user.follow.requested
+      value: "Demande envoyée"
+    - key: user.follow.cancel
+      value: "Annuler la demande"
+    - key: user.follow.friends
+      value: "Amis"
+    - key: user.follow.remove
+      value: "Retirer l'ami"
+    - key: user.invite.send
+      value: "Envoyer une invitation"
+    - key: user.invite.request
+      value: "Demander une invitation"
+    - key: user.loading
+      value: "Chargement..."
+    - key: user.error
+      value: "Utilisateur introuvable"
 

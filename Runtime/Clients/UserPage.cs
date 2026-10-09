@@ -74,7 +74,11 @@ namespace Nox.Users.Runtime.Clients {
 		private async UniTask Refresh() {
 			if (_isLoading) return;
 			_isLoading = true;
-			if (_component != null) _component.UpdateLoading();
+			// A refresh must not rebuild the interface: keep the currently displayed profile
+			// and only update the info once the new data arrives. The loading placeholder is
+			// shown only on the very first load (no user displayed yet).
+			if (_component != null && _user == null)
+				_component.UpdateLoading();
 			_user = await Main.Instance.Fetch(_identifier);
 			_isLoading = false;
 			if (_component == null) return;
@@ -88,6 +92,17 @@ namespace Nox.Users.Runtime.Clients {
 
 		public IMenu GetMenu()
 			=> Client.UiAPI.Get<IMenu>(_mId);
+
+		/// <summary>
+		/// Replaces the displayed user (used after an action changed the relation/favorite
+		/// state) without going through the loading state.
+		/// </summary>
+		internal void UpdateUser(IUser user) {
+			if (user == null)
+				return;
+			_user = user;
+			_component?.UpdateContent(_user);
+		}
 
 		public GameObject GetContent(RectTransform parent) {
 			if (_content) return _content;
