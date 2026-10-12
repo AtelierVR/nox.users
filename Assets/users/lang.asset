@@ -79,6 +79,16 @@ MonoBehaviour:
       value: "Friends"
     - key: user.follow.remove
       value: "Remove Friend"
+    - key: user.follow.follow
+      value: "Follow"
+    - key: user.follow.following
+      value: "Following"
+    - key: user.follow.unfollow
+      value: "Unfollow"
+    - key: user.follow.accept
+      value: "Accept Request"
+    - key: user.follow.refuse
+      value: "Refuse Request"
     - key: user.invite.send
       value: "Send Invite"
     - key: user.invite.request
@@ -153,6 +163,16 @@ MonoBehaviour:
       value: "Amis"
     - key: user.follow.remove
       value: "Retirer l'ami"
+    - key: user.follow.follow
+      value: "Suivre"
+    - key: user.follow.following
+      value: "Abonnement"
+    - key: user.follow.unfollow
+      value: "Ne plus suivre"
+    - key: user.follow.accept
+      value: "Accepter la demande"
+    - key: user.follow.refuse
+      value: "Refuser la demande"
     - key: user.invite.send
       value: "Envoyer une invitation"
     - key: user.invite.request

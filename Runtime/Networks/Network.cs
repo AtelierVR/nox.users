@@ -197,6 +197,35 @@ namespace Nox.Users.Runtime.Networks {
 			return true;
 		}
 
+		/// <summary>
+		/// Accepts or rejects the pending follow request of <paramref name="identifier"/>
+		/// (<c>POST /users/{id}/request</c> with <c>type: accept|reject</c>).
+		/// </summary>
+		public async UniTask<bool> RespondToRequest(Identifier identifier, bool accept, CancellationToken cancellationToken = default) {
+			var address = CurrentUser?.Server ?? ServerAddress;
+			if (string.IsNullOrEmpty(address)) {
+				Logger.LogError("Cannot respond to the follow request: no server address provided.");
+				return false;
+			}
+
+			var request = await RequestNode.To(address, $"/users/{identifier.ToString(address)}/request", Method.POST);
+			if (request == null) {
+				Logger.LogError($"Failed to create request to respond to the follow request of {identifier}");
+				return false;
+			}
+
+			request.SetBody(JObject.FromObject(new { type = accept ? "accept" : "reject" }));
+			await request.Send(cancellationToken);
+			var response = await request.Node<RelationResponse>(cancellationToken);
+			if (response.HasError()) {
+				Logger.LogError($"Failed to {(accept ? "accept" : "reject")} the follow request of {identifier}: {response.Error?.Message ?? "unknown error"}");
+				return false;
+			}
+
+			Main.Instance.CoreAPI.EventAPI.Emit("user_relation_changed", identifier);
+			return true;
+		}
+
 		public async UniTask<SearchResponse> Search(SearchRequest data, string from = null, CancellationToken cancellationToken = default) {
 			var address = from ?? CurrentUser?.Server ?? ServerAddress;
 			if (string.IsNullOrEmpty(address)) {

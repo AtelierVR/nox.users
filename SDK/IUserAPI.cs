@@ -50,5 +50,13 @@ namespace Nox.Users {
 		/// <param name="identifier">Identifier of the user to unfollow.</param>
 		/// <returns><c>true</c> when the action succeeded.</returns>
 		public UniTask<bool> Unfollow(Identifier identifier);
+
+		/// <summary>
+		/// Accepts or rejects the pending follow request of a user.
+		/// </summary>
+		/// <param name="identifier">Identifier of the user who requested to follow the current user.</param>
+		/// <param name="accept"><c>true</c> to accept the request, <c>false</c> to reject it.</param>
+		/// <returns><c>true</c> when the action succeeded.</returns>
+		public UniTask<bool> RespondToRequest(Identifier identifier, bool accept);
 	}
 }

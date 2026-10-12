@@ -154,5 +154,8 @@ namespace Nox.Users.Runtime {
 
 		public async UniTask<bool> Unfollow(Identifier identifier)
 			=> await Network.Unfollow(identifier);
+
+		public async UniTask<bool> RespondToRequest(Identifier identifier, bool accept)
+			=> await Network.RespondToRequest(identifier, accept);
 	}
 }

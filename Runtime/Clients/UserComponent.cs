@@ -58,7 +58,7 @@ namespace Nox.Users.Runtime.Clients {
 		public TextLanguage bioText;
 
 		private IUser _user;
-		private bool  _isFavorite;
+		private bool _isFavorite;
 		private bool  _isFavoriteHover;
 		private bool  _isFollowHover;
 
@@ -110,10 +110,11 @@ namespace Nox.Users.Runtime.Clients {
 
 			var url = user.Banner;
 			if (string.IsNullOrEmpty(url)) {
+				// No banner at all: fall back to the placeholder instead of hiding both slots.
 				banner.sprite = null;
 				_bannerNetworkImage.Url = null;
 				withBanner.SetActive(false);
-				withoutBanner.SetActive(false);
+				withoutBanner.SetActive(true);
 				return;
 			}
 
@@ -144,16 +145,42 @@ namespace Nox.Users.Runtime.Clients {
 			=> Main.Instance?.Current != null && !Main.Instance.Current.Identifier.Equals(user.Identifier);
 
 		private void UpdateActions(IUser user) {
-			// The actions container always exists: on your own profile (or when not
-			// authenticated) the buttons are simply disabled.
-			var canAct = HasActions(user);
-			SetActionsInteractable(canAct);
-			if (!canAct)
+			// Nothing can be done on your own profile (or when not authenticated): the whole actions
+			// box is hidden, and it is shown again as soon as a button is available.
+			if (!HasActions(user)) {
+				ShowActions(false);
+				SetActionsInteractable(false);
 				return;
+			}
 
+			ShowActions(true);
+			SetActionsInteractable(true);
 			UpdateFavoriteState().Forget();
 			UpdateFollowState();
 		}
+
+		/// <summary>
+		/// Shows/hides the action buttons. The actions box itself is hidden too when there is no
+		/// button to display. The favorites are only offered for the users the current user follows.
+		/// </summary>
+		private void ShowActions(bool visible) {
+			followButton.gameObject.SetActive(visible);
+			inviteSendButton.gameObject.SetActive(visible);
+			inviteRequestButton.gameObject.SetActive(visible);
+			favoriteButton.gameObject.SetActive(visible && IsFollowing);
+			actionsContainer.SetActive(visible);
+		}
+
+		/// <summary>
+		/// Relation of the current user towards <see cref="_user"/>. The search endpoint (and therefore
+		/// the friends list) does not carry it, so it is null until the user has been fetched.
+		/// </summary>
+		private IUserRelation Relations
+			=> _user?.Relations;
+
+		/// <summary>True when the current user follows the displayed user.</summary>
+		private bool IsFollowing
+			=> (Relations?.Out ?? UserRelationType.NONE) == UserRelationType.FOLLOW;
 
 		/// <summary>Enables/disables every action button without hiding the container.</summary>
 		private void SetActionsInteractable(bool value) {
@@ -203,18 +230,59 @@ namespace Nox.Users.Runtime.Clients {
 
 		#region Follow / Friend request
 
+		/// <summary>
+		/// Renders the follow button from the relation between the current user and the target:
+		/// a pending request received from the target is accepted (and refused while hovered),
+		/// otherwise the button follows or unfollows.
+		/// Users coming from a search result or from the friends list do not carry their relation,
+		/// so it is fetched once and the button stays disabled until it is known.
+		/// </summary>
 		private void UpdateFollowState() {
 			_isFollowHover = false;
+			SetFollowInteractable(Relations != null);
 			HoverFollow(false);
+
+			if (Relations == null && _user != null)
+				FetchRelationAsync(_user.Identifier).Forget();
 		}
+
+		/// <summary>
+		/// Resolves the relation of the current user towards <paramref name="identifier"/>: the search
+		/// endpoint does not return it, so the whole user is fetched and replaces the displayed one.
+		/// </summary>
+		private async UniTaskVoid FetchRelationAsync(Identifier identifier) {
+			var fetched = await Main.Instance.Fetch(identifier);
+			// The displayed profile may have changed while the request was in flight.
+			if (fetched == null || _user == null || !_user.Identifier.Equals(identifier))
+				return;
+
+			SetUser(fetched);
+			SetFollowInteractable(Relations != null);
+			HoverFollow(_isFollowHover);
+		}
+
+		/// <summary>Replaces the displayed user without rebuilding the interface.</summary>
+		private void SetUser(IUser user) {
+			_user = user;
+			Page?.UpdateUserCache(user);
+		}
+
+		private void SetFollowInteractable(bool value)
+			=> followButton.interactable = value;
 
 		private void HoverFollow(bool isHover) {
 			if (_user == null || !HasActions(_user)) return;
 			_isFollowHover = isHover;
-			switch (_user?.Relations?.Out ?? UserRelationType.NONE) {
+
+			// A pending request received from that user takes priority over everything else: the
+			// button accepts it, and refuses it while hovered (the hover reveals the other action).
+			if ((Relations?.In ?? UserRelationType.NONE) == UserRelationType.REQUEST) {
+				followIcon.sprite = Client.GetAsset<Sprite>("ui:icons/success.png");
+				followLabel.UpdateText(isHover ? "user.follow.refuse" : "user.follow.accept");
+			} else switch (Relations?.Out ?? UserRelationType.NONE) {
 				case UserRelationType.FOLLOW:
 					followIcon.sprite = Client.GetAsset<Sprite>($"ui:icons/{(isHover ? "cancel" : "friend")}.png");
-					followLabel.UpdateText(isHover ? "user.follow.remove" : "user.follow.friends");
+					followLabel.UpdateText(isHover ? "user.follow.unfollow" : "user.follow.following");
 					break;
 				case UserRelationType.REQUEST:
 					followIcon.sprite = Client.GetAsset<Sprite>($"ui:icons/{(isHover ? "cancel" : "person_add")}.png");
@@ -222,30 +290,43 @@ namespace Nox.Users.Runtime.Clients {
 					break;
 				default:
 					followIcon.sprite = Client.GetAsset<Sprite>("ui:icons/person_add.png");
-					followLabel.UpdateText("user.follow.none");
+					followLabel.UpdateText("user.follow.follow");
 					break;
 			}
+
+			// The favorites are only offered for the users the current user follows.
+			favoriteButton.gameObject.SetActive(IsFollowing);
 		}
 
 		private async UniTask OnFollowClickedAsync() {
 			if (_user == null || !followButton.interactable) return;
 
-			var outgoing = _user.Relations?.Out ?? UserRelationType.NONE;
+			var outgoing = Relations?.Out ?? UserRelationType.NONE;
+			// A request received from that user is accepted, or refused when the button is hovered.
+			var isRequest = (Relations?.In ?? UserRelationType.NONE) == UserRelationType.REQUEST;
+			var accept    = !_isFollowHover;
+
 			followButton.interactable = false;
 			try {
-				var ok = outgoing == UserRelationType.NONE
-					? await Main.Instance.Follow(_user.Identifier)
-					: await Main.Instance.Unfollow(_user.Identifier);
+				var ok = isRequest
+					? await Main.Instance.RespondToRequest(_user.Identifier, accept)
+					: outgoing == UserRelationType.NONE
+						? await Main.Instance.Follow(_user.Identifier)
+						: await Main.Instance.Unfollow(_user.Identifier);
 
 				if (ok) {
-					// The relation changed server-side: refresh the user to update the button.
+					// The relation changed server-side: refresh it so the button follows, without
+					// rebuilding the page (the images would be reloaded).
 					var refreshed = await Main.Instance.Fetch(_user.Identifier);
 					if (refreshed != null)
-						Page?.UpdateUser(refreshed);
-					else HoverFollow(_isFollowHover);
-				} else HoverFollow(_isFollowHover);
+						SetUser(refreshed);
+				}
+
+				// The hover has been consumed: render the new state without the refusal hint.
+				_isFollowHover = false;
+				HoverFollow(false);
 			} finally {
-				followButton.interactable = true;
+				followButton.interactable = Relations != null;
 			}
 		}
 
@@ -277,6 +358,7 @@ namespace Nox.Users.Runtime.Clients {
 			withBanner.SetActive(false);
 			withoutBanner.SetActive(true);
 			presence.gameObject.SetActive(false);
+			ShowActions(false);
 			SetActionsInteractable(false);
 		}
 
@@ -293,6 +375,7 @@ namespace Nox.Users.Runtime.Clients {
 			withBanner.SetActive(false);
 			withoutBanner.SetActive(true);
 			presence.gameObject.SetActive(false);
+			ShowActions(false);
 			SetActionsInteractable(false);
 		}
 
@@ -369,42 +452,6 @@ namespace Nox.Users.Runtime.Clients {
 			Reference.GetComponent<TextLanguage>("text", component.actionsContainer).UpdateText("user.about.actions");
 			component.actions = Reference.GetComponent<RectTransform>("content", actionContainerAsset.Instantiate(Reference.GetComponent<RectTransform>("content", component.actionsContainer)));
 
-			#region Favorite Button
-
-			var favorite             = actionButtonAsset.Instantiate(component.actions);
-			var favoriteEventTrigger = Reference.GetComponent<EventTrigger>("button", favorite);
-			component.favoriteButton = Reference.GetComponent<Button>("button", favorite);
-			component.favoriteIcon   = Reference.GetComponent<Image>("image", favorite);
-			component.favoriteLabel  = Reference.GetComponent<TextLanguage>("text", favorite);
-			component.favoriteLabel.UpdateText("user.favorite.none");
-			component.favoriteIcon.sprite = Client.GetAsset<Sprite>("ui:icons/bookmark.png");
-			SetupEvents(
-				favoriteEventTrigger,
-				() => component.OnFavoriteClickedAsync().Forget(),
-				() => component.HoverFavorite(true),
-				() => component.HoverFavorite(false)
-			);
-
-			#endregion
-
-			#region Follow Button
-
-			var follow             = actionButtonAsset.Instantiate(component.actions);
-			var followEventTrigger = Reference.GetComponent<EventTrigger>("button", follow);
-			component.followButton = Reference.GetComponent<Button>("button", follow);
-			component.followIcon   = Reference.GetComponent<Image>("image", follow);
-			component.followLabel  = Reference.GetComponent<TextLanguage>("text", follow);
-			component.followLabel.UpdateText("user.follow.none");
-			component.followIcon.sprite = Client.GetAsset<Sprite>("ui:icons/person_add.png");
-			SetupEvents(
-				followEventTrigger,
-				() => component.OnFollowClickedAsync().Forget(),
-				() => component.HoverFollow(true),
-				() => component.HoverFollow(false)
-			);
-
-			#endregion
-
 			#region Invite Buttons (not implemented yet)
 
 			var inviteSend             = actionButtonAsset.Instantiate(component.actions);
@@ -433,6 +480,42 @@ namespace Nox.Users.Runtime.Clients {
 				() => component.OnInviteRequestClicked(),
 				() => { },
 				() => { }
+			);
+
+			#endregion
+
+			#region Follow / Friend request Button
+
+			var follow             = actionButtonAsset.Instantiate(component.actions);
+			var followEventTrigger = Reference.GetComponent<EventTrigger>("button", follow);
+			component.followButton = Reference.GetComponent<Button>("button", follow);
+			component.followIcon   = Reference.GetComponent<Image>("image", follow);
+			component.followLabel  = Reference.GetComponent<TextLanguage>("text", follow);
+			component.followLabel.UpdateText("user.follow.follow");
+			component.followIcon.sprite = Client.GetAsset<Sprite>("ui:icons/person_add.png");
+			SetupEvents(
+				followEventTrigger,
+				() => component.OnFollowClickedAsync().Forget(),
+				() => component.HoverFollow(true),
+				() => component.HoverFollow(false)
+			);
+
+			#endregion
+
+			#region Favorite Button (only offered for the followed users)
+
+			var favorite             = actionButtonAsset.Instantiate(component.actions);
+			var favoriteEventTrigger = Reference.GetComponent<EventTrigger>("button", favorite);
+			component.favoriteButton = Reference.GetComponent<Button>("button", favorite);
+			component.favoriteIcon   = Reference.GetComponent<Image>("image", favorite);
+			component.favoriteLabel  = Reference.GetComponent<TextLanguage>("text", favorite);
+			component.favoriteLabel.UpdateText("user.favorite.none");
+			component.favoriteIcon.sprite = Client.GetAsset<Sprite>("ui:icons/bookmark.png");
+			SetupEvents(
+				favoriteEventTrigger,
+				() => component.OnFavoriteClickedAsync().Forget(),
+				() => component.HoverFavorite(true),
+				() => component.HoverFavorite(false)
 			);
 
 			#endregion

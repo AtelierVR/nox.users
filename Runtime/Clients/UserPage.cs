@@ -94,14 +94,13 @@ namespace Nox.Users.Runtime.Clients {
 			=> Client.UiAPI.Get<IMenu>(_mId);
 
 		/// <summary>
-		/// Replaces the displayed user (used after an action changed the relation/favorite
-		/// state) without going through the loading state.
+		/// Replaces the cached user without re-rendering it, used when only the relation with the
+		/// current user changed (the component already refreshed its own buttons).
 		/// </summary>
-		internal void UpdateUser(IUser user) {
+		internal void UpdateUserCache(IUser user) {
 			if (user == null)
 				return;
 			_user = user;
-			_component?.UpdateContent(_user);
 		}
 
 		public GameObject GetContent(RectTransform parent) {
