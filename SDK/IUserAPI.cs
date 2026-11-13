@@ -13,10 +13,14 @@ namespace Nox.Users {
 
 		public UniTask<ISearchResponse> FetchFriends(uint offset = 0, uint limit = 50);
 
+		public void WatchPresence();
+
+		public void UnwatchPresence();
+
 		public UniTask<IAuthToken> GetToken(string address);
 
 		public UniTask<ICurrentUser> UpdateCurrent(IUpdateCurrentUserRequest request);
-		
+
 		/// <summary>
 		/// Adds a user to the favorites list.
 		/// </summary>

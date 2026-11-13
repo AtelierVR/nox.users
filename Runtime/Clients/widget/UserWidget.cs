@@ -113,12 +113,12 @@ namespace Nox.Users.Runtime.Clients {
 			);
 		}
 
-		private async UniTask UpdateBanner(IUser user) {
+		private UniTask UpdateBanner(IUser user) {
 			var url = user.Banner;
 
 			if (string.IsNullOrEmpty(url)) {
 				_container.SetActive(false);
-				return;
+				return UniTask.CompletedTask;
 			}
 
 			// Enable container so NetworkImage can start loading
@@ -134,6 +134,8 @@ namespace Nox.Users.Runtime.Clients {
 				_container.SetActive(false);
 			});
 			networkImage.Url = url;
+
+			return UniTask.CompletedTask;
 		}
 
 		private async UniTask UpdateThumbnail(IUser user) {

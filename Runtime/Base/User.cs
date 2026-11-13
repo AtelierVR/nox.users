@@ -4,7 +4,6 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using Nox.CCK.Convertors;
 using Nox.CCK.Utils;
-using Nox.Users;
 
 namespace Nox.Users.Runtime.Base {
 	[Serializable]
@@ -43,7 +42,13 @@ namespace Nox.Users.Runtime.Base {
 			=> Links.ToArray<ILinkEntry>();
 
 		[JsonProperty("relations")]
-		public UserRelation Relations { get; private set; }
+		public UserRelation Relations { get; internal set; }
+
+		internal void ApplyRelation(UserRelationType inRelation, UserRelationType outRelation)
+			=> Relations = new UserRelation {
+				In = inRelation,
+				Out = outRelation
+			};
 
 		IUserRelation IUser.Relations
 			=> Relations;
@@ -58,7 +63,10 @@ namespace Nox.Users.Runtime.Base {
 		public int Following { get; }
 
 		[JsonProperty("presence")]
-		public UserPresence Presence { get; private set; }
+		public UserPresence Presence { get; internal set; }
+
+		internal void ApplyPresence(UserStatus status, string text, string[] locations = null)
+			=> Presence = new UserPresence { Status = status, Text = text, Locations = locations };
 
 		IUserPresence IUser.Presence
 			=> Presence;

@@ -90,6 +90,12 @@ namespace Nox.Users.Runtime.Clients {
 			UpdateActions(user);
 		}
 
+		/// <summary>Re-renders only the presence dot, without touching the images.</summary>
+		public void RefreshPresence() {
+			if (_user == null) return;
+			UpdatePresence(_user);
+		}
+
 		private void UpdateThumbnail(IUser user) {
 			if (string.IsNullOrEmpty(user?.Thumbnail)) {
 				thumbnail.sprite = null;

@@ -7,7 +7,7 @@ using Nox.CCK.Search;
 namespace Nox.Users.Runtime.Search {
 	public class SearchHandler : IHandler {
 		public string GetId()
-			=> Main.Instance.CoreAPI.ModMetadata.GetId();
+			=> Main.Instance.CoreAPI.ModMetadata.Id;
 
 		public string GetTitleKey()
 			=> "user.search.title";
