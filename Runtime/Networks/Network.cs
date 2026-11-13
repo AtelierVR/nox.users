@@ -82,29 +82,66 @@ namespace Nox.Users.Runtime.Networks {
 			InvokeUpdate(user);
 		}
 
-		/// <summary>
-		/// Applies a <c>user:update</c> pushed by the server. When the identifier matches the current
-		/// user, the profile is refreshed and <c>user_update</c> (+ <c>user_fetch</c>) is emitted;
-		/// otherwise only <c>user_fetch</c> is emitted for that user.
-		/// </summary>
-		public void ApplyUserUpdate(JToken data) {
-			if (data == null)
+		public void ApplyCurrentUser(CurrentUser user) {
+			if (user == null || !user.Identifier.IsValid())
 				return;
 
-			var identifier = new Identifier(
-				"u",
-				data["id"]?.Value<uint>() ?? 0u,
-				null,
-				data["server"]?.Value<string>()
-			);
+			CurrentUser = user;
+			InvokeUpdate(CurrentUser);
+		}
 
-			if (CurrentUser != null && identifier.Equals(CurrentUser.Identifier)) {
-				CurrentUser = data.ToObject<CurrentUser>();
+		public void ApplyUserChanged(UserChangedFrame frame) {
+			if (frame == null)
+				return;
+
+			if (frame.Entity != null) {
+				frame.Entity.ApplyRelation(
+					frame.In ? UserRelationType.FOLLOW : UserRelationType.NONE,
+					frame.Out ? UserRelationType.FOLLOW : UserRelationType.NONE
+				);
+
+				InvokeFetch(frame.Entity);
+				Main.Instance.CoreAPI.EventAPI.Emit("user_changed", frame.Entity);
+				return;
+			}
+
+			if (!frame.User.IsValid())
+				return;
+
+			Main.Instance.CoreAPI.EventAPI.Emit("user_changed", frame.User);
+		}
+
+		public void ApplyRelation(UserRelationFrame frame) {
+			if (frame == null || !frame.User.IsValid())
+				return;
+
+			Main.Instance.CoreAPI.EventAPI.Emit("user_relation_changed", frame.User);
+		}
+
+		public void ApplyRelationChanged(RelationChangedFrame frame) {
+			if (frame == null || !frame.Target.IsValid())
+				return;
+
+			Main.Instance.CoreAPI.EventAPI.Emit("user_relation_changed", frame.Target, frame.Action);
+		}
+
+		public void ApplyPresence(UserPresenceFrame frame) {
+			if (frame == null || !frame.User.IsValid())
+				return;
+
+			if (CurrentUser != null && frame.User.Equals(CurrentUser.Identifier)) {
+				CurrentUser.ApplyPresence(frame.Status, frame.Text, frame.Locations);
 				InvokeUpdate(CurrentUser);
 				return;
 			}
 
-			InvokeFetch(data.ToObject<User>());
+			Main.Instance.CoreAPI.EventAPI.Emit(
+				"user_presence",
+				frame.User,
+				frame.Status,
+				frame.Text,
+				frame.Locations
+			);
 		}
 
 		public UniTask<User> Fetch(Identifier identifier, string from = null, CancellationToken cancellationToken = default)
@@ -247,7 +284,7 @@ namespace Nox.Users.Runtime.Networks {
 			}
 
 			var users = response.Data;
-			users.Server  = address;
+			users.Server = address;
 			users.Request = data;
 
 			foreach (var user in users.Items)
@@ -280,7 +317,7 @@ namespace Nox.Users.Runtime.Networks {
 			}
 
 			var loggedOutUser = CurrentUser;
-			CurrentUser   = null;
+			CurrentUser = null;
 			ServerAddress = null;
 			var config = Config.Load();
 			config.Remove(new[] { "server", address, "_token" });
@@ -299,7 +336,7 @@ namespace Nox.Users.Runtime.Networks {
 				return null;
 			}
 
-			var path    = $"/users/@me/friends?offset={offset}&limit={limit}";
+			var path = $"/users/@me/friends?offset={offset}&limit={limit}";
 			var request = await RequestNode.To(address, path);
 			if (request == null) {
 				Logger.LogError("Failed to create request for friends list");
@@ -361,7 +398,7 @@ namespace Nox.Users.Runtime.Networks {
 					.ToArray();
 				var response = await Search(
 					new SearchRequest {
-						ids   = ids,
+						ids = ids,
 						limit = (uint)ids.Length
 					},
 					server,
@@ -411,7 +448,7 @@ namespace Nox.Users.Runtime.Networks {
 			await request.Send(cancellationToken);
 
 			var response = await request.Node<LoginResponse>(cancellationToken);
-			var login    = response.Data;
+			var login = response.Data;
 
 			Logger.LogDebug($"Login response: {response.HasError()} {response.Error} {form.ToJson()}");
 			if (response.HasError()) {
@@ -420,14 +457,14 @@ namespace Nox.Users.Runtime.Networks {
 					Error = errorInfo.Message,
 					Verification = new VerificationRequired {
 						Required = errorInfo.Code == "VERIFICATION_REQUIRED",
-						Methods  = login?.methods ?? Array.Empty<VerificationMethod>()
+						Methods = login?.methods ?? Array.Empty<VerificationMethod>()
 					}
 				};
 			}
 
 
 			// Successful login - set current user and save config
-			CurrentUser   = login.user;
+			CurrentUser = login.user;
 			ServerAddress = login.user.Server;
 			var config = Config.Load();
 			config.Set(new[] { "servers", login.user.Server, "_token" }, login.token);
@@ -477,33 +514,33 @@ namespace Nox.Users.Runtime.Networks {
 			return integrity;
 		}
 
-		public async UniTask<AuthToken> GetToken(string server) {
+		public UniTask<AuthToken> GetToken(string server) {
 
 			if (string.IsNullOrEmpty(server)) {
 				Logger.LogError("Cannot get token: no server provided.");
-				return null;
+				return UniTask.FromResult<AuthToken>(null);
 			}
 
 			var address = ServerAddress;
 			if (string.IsNullOrEmpty(address)) {
 				Logger.LogError("Cannot get token: no server address provided.");
-				return null;
+				return UniTask.FromResult<AuthToken>(null);
 			}
 
 			var config = Config.Load();
 
 			if (server == address) {
 				if (!config.Has(new[] { "servers", address, "_token" }))
-					return null;
+					return UniTask.FromResult<AuthToken>(null);
 				var expires = config.Get(new[] { "servers", address, "expires" }, long.MinValue);
 				if (expires > DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
-					return new AuthToken {
-						Token     = config.Get<string>(new[] { "servers", address, "_token" }),
+					return UniTask.FromResult(new AuthToken {
+						Token = config.Get<string>(new[] { "servers", address, "_token" }),
 						Integrity = false
-					};
+					});
 			}
 
-			return null;
+			return UniTask.FromResult<AuthToken>(null);
 
 		}
 
@@ -584,9 +621,9 @@ namespace Nox.Users.Runtime.Networks {
 			[JsonProperty("label")]
 			public string Label { get; set; }
 			[JsonProperty("values"), JsonConverter(typeof(ArrayConverter<StringToIdentifierConverter>))]
-			#pragma warning disable UAC1001
+#pragma warning disable UAC1001
 			public Identifier[] Values { get; set; }
-			#pragma warning restore UAC1001
+#pragma warning restore UAC1001
 		}
 
 		/// <summary>
@@ -594,12 +631,12 @@ namespace Nox.Users.Runtime.Networks {
 		/// </summary>
 		/// <returns></returns>
 		public async UniTask<Favorites> FetchFavorites(uint group = 0, bool pub = true) {
-			var key   = $"{(pub ? "public." : "")}favorites.users.{group}";
+			var key = $"{(pub ? "public." : "")}favorites.users.{group}";
 			var entry = await Main.TableAPI.Get(key);
 			if (entry == null)
 				return new Favorites {
-					Key    = key,
-					Label  = null,
+					Key = key,
+					Label = null,
 					Values = Array.Empty<Identifier>()
 				};
 			var result = JsonConvert.DeserializeObject<Favorites>(entry.AsString);

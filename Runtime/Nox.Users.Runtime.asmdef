@@ -2,6 +2,7 @@
     "name": "Nox.Users.Runtime",
     "rootNamespace": "",
     "references": [
+        "Nox.CCK.Assets",
         "Nox.CCK",
         "Nox.Editor.Panel",
         "UniTask",

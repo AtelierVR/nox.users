@@ -53,6 +53,12 @@
       "type": "depends",
       "version": ">=1.0.0",
       "register": "git+https://github.com/AtelierVR/nox.network.git"
+    },
+    {
+      "id": "servers",
+      "type": "depends",
+      "version": ">=1.0.0",
+      "register": "git+https://github.com/AtelierVR/nox.servers.git"
     }
   ],
   "constraints": [

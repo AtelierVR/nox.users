@@ -8,6 +8,7 @@ using Nox.Network;
 using Nox.Search;
 using Nox.Servers;
 using Nox.Tables;
+using Nox.Users.Runtime.Base;
 using Nox.Users.Runtime.Networks;
 using UnityEngine.Networking;
 
@@ -40,10 +41,10 @@ namespace Nox.Users.Runtime {
 				?.GetInstance<ITableAPI>();
 
 		public async UniTask OnInitializeMainAsync(IMainModCoreAPI api) {
-			CoreAPI  = api;
+			CoreAPI = api;
 			Instance = this;
 			RequestNode.OnCreated.AddListener(OnBeforeRequest);
-			Network   = new Networks.Network();
+			Network = new Networks.Network();
 			_language = api.AssetAPI.GetAsset<LanguagePack>("lang.asset");
 			if (_language != null) LanguageManager.AddPack(_language);
 
@@ -69,51 +70,58 @@ namespace Nox.Users.Runtime {
 		}
 
 		public void OnPostInitializeMain() {
-			ServerAPI?.OnSocketConnected.AddListener(OnSocketConnected);
-			RegisterServerEvents();
-		}
+			_events = CoreAPI?.ModAPI
+				.GetMod("servers")
+				?.GetInstance<IServerEventsAPI>();
 
-		private IServerSocket _registeredSocket;
-
-		/// <summary>
-		/// (Re)registers the socket handlers: a fresh <see cref="IServerSocket"/> is created on each
-		/// connection, so the handler is attached once per socket instance (handlers persist across
-		/// a reconnect of the same socket).
-		/// </summary>
-		private void OnSocketConnected()
-			=> RegisterServerEvents();
-
-		private void RegisterServerEvents() {
-			var socket = ServerAPI?.Current;
-			if (socket == null || ReferenceEquals(socket, _registeredSocket))
+			if (_events == null) {
+				Logger.LogWarning("The servers mod exposes no WebSocket events: the user frames stay off.");
 				return;
+			}
 
-			_registeredSocket = socket;
-			socket.On<ServerEvent>("event", OnServerPacket);
+			_events.On<CurrentUser>("current.changed", OnCurrentUserFrame);
+			_events.On<UserChangedFrame>("user.changed", OnUserChangedFrame);
+			_events.On<UserRelationFrame>("user.relation", OnUserRelationFrame);
+			_events.On<RelationChangedFrame>("relation.changed", OnRelationChangedFrame);
+			_events.On<UserPresenceFrame>("user.presence", OnPresenceFrame);
 		}
 
-		/// <summary>
-		/// Routes the server <c>user:update</c> event: <see cref="Networks.Network.ApplyUserUpdate"/> decides,
-		/// from the current user identifier, whether to emit <c>user_update</c> or <c>user_fetch</c>.
-		/// </summary>
-		private void OnServerPacket(SocketPacket<ServerEvent> packet) {
-			if (packet?.payload?.Name != "user:update")
-				return;
+		private IServerEventsAPI _events;
 
-			Network.ApplyUserUpdate(packet.payload.Data);
-		}
+		private void OnCurrentUserFrame(SocketPacket<CurrentUser> packet)
+			=> Network.ApplyCurrentUser(packet?.payload);
+
+		private void OnUserChangedFrame(SocketPacket<UserChangedFrame> packet)
+			=> Network.ApplyUserChanged(packet?.payload);
+
+		private void OnUserRelationFrame(SocketPacket<UserRelationFrame> packet)
+			=> Network.ApplyRelation(packet?.payload);
+
+		private void OnRelationChangedFrame(SocketPacket<RelationChangedFrame> packet)
+			=> Network.ApplyRelationChanged(packet?.payload);
+
+		private void OnPresenceFrame(SocketPacket<UserPresenceFrame> packet)
+			=> Network.ApplyPresence(packet?.payload);
 
 		public void OnDisposeMain() {
-			ServerAPI?.OnSocketConnected.RemoveListener(OnSocketConnected);
+			if (_events != null) {
+				_events.Off<CurrentUser>("current.changed", OnCurrentUserFrame);
+				_events.Off<UserChangedFrame>("user.changed", OnUserChangedFrame);
+				_events.Off<UserRelationFrame>("user.relation", OnUserRelationFrame);
+				_events.Off<RelationChangedFrame>("relation.changed", OnRelationChangedFrame);
+				_events.Off<UserPresenceFrame>("user.presence", OnPresenceFrame);
+			}
+
+			_events = null;
 			RequestNode.OnCreated.RemoveListener(OnBeforeRequest);
 			_search.Dispose();
 			Network.Dispose();
 			if (_language != null) LanguageManager.RemovePack(_language);
-			_search   = null;
-			Network   = null;
+			_search = null;
+			Network = null;
 			_language = null;
-			CoreAPI   = null;
-			Instance  = null;
+			CoreAPI = null;
+			Instance = null;
 		}
 
 		public ICurrentUser Current
@@ -130,6 +138,12 @@ namespace Nox.Users.Runtime {
 
 		public async UniTask<ISearchResponse> FetchFriends(uint offset = 0, uint limit = 50)
 			=> await Network.FetchFriends(offset, limit);
+
+		public void WatchPresence()
+			=> _events?.Subscribe("user.presence");
+
+		public void UnwatchPresence()
+			=> _events?.Unsubscribe("user.presence");
 
 		public async UniTask<IAuthToken> GetToken(string address)
 			=> await Network.GetToken(address);
